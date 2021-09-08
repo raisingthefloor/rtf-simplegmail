@@ -1,0 +1,755 @@
+@media (min-width: 320px) and (max-width: 1600px) {
+    .common__tab__area.diff #nav-tabContent {
+        flex: 0 0 77%;
+        padding-left: 33px;
+        width: 77%;
+    }
+    .common__tab__area.diff nav {
+        width: 23%;
+        flex: 0 0 23%;
+    }
+    .header__search {
+        width: 690px;
+    }
+    .common__left {
+        flex: 0 0 76%;
+        width: 76%;
+    }
+    .common__address__right {
+        flex: 0 0 22%;
+        width: 22%;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 1449px) {
+    .common__tab__area.diff nav {
+        width: 24%;
+        flex: 0 0 24%;
+    }
+    .header__search {
+        width: 660px;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        flex: 0 0 76%;
+        padding-left: 33px;
+        width: 76%;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 9px 20px;
+        margin: 0 3px;
+        font-size: 15px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 6px 18px;
+    }
+    .common__mail__body {
+        min-height: 470px;
+    }
+    .common__address__right {
+        flex: 0 0 24%;
+        width: 24%;
+    }
+    .common__left {
+        flex: 0 0 74%;
+        width: 74%;
+    }
+    .draft__alert__wrap {
+        margin-top: 71px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 1360px) {
+    .common__left {
+        flex: 0 0 70%;
+        width: 70%;
+    }
+    .common__address__right {
+        flex: 0 0 28%;
+        width: 28%;
+    }
+    .draft__alert__wrap h6 {
+        font-size: 22px;
+        margin-bottom: 26px;
+    }
+    .draft__alert__wrap .common__btn {
+        font-size: 15px;
+        padding: 9px 21px;
+    }
+    .draft__alert__wrap {
+        max-width: 490px;
+        padding: 20px 26px;
+        margin-top: 70px;
+    }
+    .address__book__wrapper {
+        max-width: 715px;
+        margin-right: 70px;
+    }
+    .common__tab__area.diff nav {
+        width: 26%;
+        flex: 0 0 26%;
+    }
+    .header__search {
+        width: 580px;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        flex: 0 0 74%;
+        padding-left: 30px;
+        width: 74%;
+    }
+    .main__area.search-result-page .mail__bottom__btns .common__btn {
+        padding: 9px 15px;
+        margin: 0 2px;
+        font-size: 14px;
+    }
+    .common__tab__area .nav__title h5 {
+        font-size: 20px;
+    }
+    .nav__title {
+        padding: 10px 15px;
+    }
+    .nav__btn__content p {
+        font-size: 15px;
+    }
+    .common__tab__area .nav-tabs .nav-link {
+        padding: 9px 13px;
+    }
+    .common__tab__area.diff .nav-tabs .nav-link::before {
+        right: -31px;
+        width: 30px;
+        height: 48px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 6px 18px;
+    }
+    .main__area.search-result-page .mail__bottom__btns .trash--btn {
+        padding: 6px 18px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 1200px) {
+    .address__book__wrapper nav h6 {
+        font-size: 18px;
+    }
+    .address__book__wrapper .nav-tabs .nav-link {
+        padding: 4px 15px;
+        font-size: 16px;
+    }
+    .mail-title {
+        font-size: 17px;
+    }
+    .user--email a {
+        font-size: 17px;
+    }
+    .draft__alert__wrap h6 {
+        font-size: 20px;
+        margin-bottom: 25px;
+    }
+    .draft__alert__btn p {
+        font-size: 19px;
+        min-width: 140px;
+        padding-right: 15px;
+    }
+    .alert__checkbox {
+        margin-top: 26px;
+        margin-bottom: -9px;
+        font-size: 16px;
+    }
+    .draft__alert__wrap .common__btn {
+        font-size: 15px;
+        padding: 8px 14px;
+    }
+    .draft__alert__wrap {
+        max-width: 450px;
+        padding: 20px 18px;
+        margin-top: 70px;
+    }
+    .used__address__top img {
+        max-width: 70px;
+        margin-bottom: 12px;
+    }
+    .used__address__top h6 {
+        font-size: 17px;
+    }
+    .mail__bottom__action img {
+        width: 23px;
+    }
+    .mail__bottom__action {
+        margin: 0 3px;
+    }
+    .show__address__book a {
+        font-size: 17px;
+        padding-right: 16px;
+    }
+    .write__email__btn a {
+        width: 135px;
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+    .write__email__btn a span {
+        max-width: 37px;
+    }
+    .main_menu ul li a {
+        margin-bottom: 6px;
+        padding: 8px 17px;
+        font-size: 17px;
+        padding-right: 10px;
+    }
+    .logo__main img {
+        max-width: 120px;
+        width: 120px;
+    }
+    .menu__bar {
+        width: 227px;
+        padding-top: 110px;
+    }
+    .header__search input {
+        font-size: 16px;
+        height: 43px;
+        padding: 0 3px;
+    }
+    .header__search {
+        width: 445px;
+        height: 55px;
+        margin-left: 94px;
+    }
+    .head__right__btns .btn {
+        min-width: 43px;
+        height: 43px;
+        max-width: 43px;
+        margin: 0 1px;
+    }
+    .header__profile h6 {
+        font-size: 23px;
+        margin-bottom: 2px;
+    }
+    .main__area {
+        padding-top: 76px;
+        padding-bottom: 60px;
+        padding-left: 227px;
+    }
+    .mail--content p {
+        font-size: 17px;
+    }
+    .mail__details__blk p {
+        font-size: 16px;
+    }
+    .main__area.search-result-page .mail__bottom__btns .common__btn {
+        padding: 9px 10px;
+        margin: 0 0px;
+        font-size: 13px;
+    }
+    .main__area.search-result-page .mail__bottom__btns .trash--btn {
+        padding: 6px 10px;
+    }
+    .common__mail__bottom {
+        padding: 6px 10px;
+    }
+    .mail__bottom__btns .trash--btn img {
+        max-width: 19px;
+        margin-right: 5px;
+    }
+    .dropdown-toggle {
+        font-size: 27px;
+        top: 2px;
+    }
+    .main__area.search-result-page .mail__bottom__btns .common__btn {
+        padding: 9px 11px;
+        margin: 0 0px;
+        font-size: 12px;
+    }
+    .common__tab__area.diff .nav-tabs .nav-link::before {
+        right: -25px;
+        width: 24px;
+        height: 41px;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        padding-left: 24px;
+    }
+    .common__tab__area .nav__title h5 {
+        font-size: 19px;
+    }
+    .nav__title {
+        padding: 9px 10px;
+    }
+    .new__message {
+        font-size: 12px;
+        margin-left: 4px;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 8px 15px;
+        margin: 0 1px;
+        font-size: 14px;
+    }
+    .mail__bottom__btns .trash--btn img {
+        max-width: 16px;
+        margin-right: 3px;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 8px 13px;
+        margin: 0 1px;
+        font-size: 14px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 5px 13px;
+        font-size: 12px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+    .mail__bottom__btns .trash--btn img {
+        margin-right: 6px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 991px) {
+    .address__book__wrapper nav h6 {
+        font-size: 17px;
+        margin-bottom: 12px;
+    }
+    .address__book__wrapper .nav-tabs .nav-link {
+        padding: 3px 13px;
+        font-size: 15px;
+    }
+    .address__pro-thumb {
+        height: 62px;
+        width: 62px;
+        margin-right: 18px;
+    }
+    .address__profile a {
+        font-size: 20px;
+    }
+    .mail-title {
+        font-size: 16px;
+    }
+    .user--email a {
+        font-size: 16px;
+    }
+    .user__address__details p {
+        font-size: 16px;
+    }
+    .address__book__wrapper nav {
+        width: 235px;
+        padding: 19px 20px;
+        padding-right: 20px;
+    }
+    .address__book__wrapper #nav-tabContent {
+        padding: 23px 25px;
+    }
+    .address__book__wrapper {
+        max-width: 625px;
+        margin-right: 65px;
+    }
+    .used__address__top img {
+        max-width: 61px;
+        margin-bottom: 10px;
+    }
+    .address__item {
+        padding: 6px 12px;
+        font-size: 16px;
+    }
+    .menu__open {
+        display: flex;
+    }
+    .logo__main img {
+        max-width: 112px;
+        width: 112px;
+    }
+    .header__search {
+        width: 355px;
+        height: 54px;
+        margin-left: 20px;
+        padding: 5px 3px;
+    }
+    .header__profile h6 {
+        display: none;
+    }
+    .profile-thumb {
+        width: 34px;
+        height: 34px;
+        margin-left: 0;
+    }
+    .header__profile {
+        border-radius: 7px;
+        padding: 3px 4px;
+        margin-left: 4px;
+        background: transparent;
+    }
+    .menu__bar {
+        left: -100%;
+        width: 250px;
+        z-index: 99;
+        padding-right: 15px;
+        padding-top: 100px;
+    }
+    .write__email__btn {
+        margin-bottom: 28px;
+    }
+    .menu__bar.show {
+        left: 0;
+    }
+    .offcanvas-overlay {
+        position: fixed;
+        top: 0%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9;
+        transition: .3s;
+        opacity: 0;
+        visibility: hidden;
+        background: #000;
+    }
+    .offcanvas-overlay.show {
+        opacity: .5;
+        visibility: visible;
+    }
+    .header__area {
+        z-index: 999;
+    }
+    .main__area {
+        padding-top: 80px;
+        padding-bottom: 60px;
+        padding-left: 8px;
+    }
+    .common__tab__area.diff nav {
+        width: 28%;
+        flex: 0 0 28%;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        flex: 0 0 72%;
+        width: 72%;
+    }
+    .common__tab__area .nav__title h5 {
+        font-size: 18px;
+    }
+    .nav__title {
+        padding: 8px 10px;
+    }
+    .main_menu ul li a:hover, .main_menu ul li a.active {
+        border-right: 2px solid #4571c2;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 9px 13px;
+        margin: 0 1px;
+        font-size: 13px;
+    }
+    .dropdown-toggle {
+        font-size: 24px;
+    }
+    .dropdown-item {
+        padding: 1px 15px;
+        font-size: 15px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 767px) {
+    .main__area.addres__book__a .container-fluid {
+        padding-left: 7px!important;
+    }
+    .address__book__wrapper nav {
+        width: 235px;
+        padding: 17px 17px;
+        padding-right: 18px;
+    }
+    .address__book__wrapper nav h6 {
+        font-size: 16px;
+    }
+    .address__pro-thumb {
+        height: 56px;
+        width: 56px;
+        margin-right: 15px;
+    }
+    .address__profile a {
+        font-size: 19px;
+    }
+    .mail-title {
+        font-size: 15px;
+    }
+    .user--email a {
+        font-size: 15px;
+        margin-left: 30px;
+    }
+    .address__book__wrapper #nav-tabContent {
+        padding: 22px 20px;
+    }
+    .user__address__details h5 {
+        font-size: 17px;
+        margin-bottom: 9px;
+    }
+    .address__book__wrapper {
+        max-width: 600px;
+        margin-right: 36px;
+        margin-left: 0;
+    }
+    .draft__alert__wrap {
+        max-width: 410px;
+        padding: 19px 17px;
+        margin-top: 25px;
+    }
+    .draft__alert__wrap .common__btn {
+        font-size: 14px;
+        padding: 7px 14px;
+    }
+    .draft__alert__btn p {
+        font-size: 17px;
+        min-width: 115px;
+        padding-right: 12px;
+    }
+    .common-area {
+        flex-direction: column-reverse;
+    }
+    .common__address__right {
+        flex: 0 0 44%;
+        width: 44%;
+        margin-bottom: 23px;
+    }
+    .used__addresses {
+        margin-top: 18px;
+        min-height: 68vh;
+    }
+    .mail__bottom__action img {
+        width: 22px;
+    }
+    .mail__bottom__action {
+        margin: 0 2px;
+    }
+    .common__left {
+        flex: 0 0 100%;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .common__mail__body textarea {
+        height: 180px;
+        font-size: 16px;
+    }
+    .common__tab__area {
+        display: block;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        padding-left: 0;
+        margin-top: 22px;
+    }
+    .common__tab__area.diff #nav-tabContent {
+        flex: 0 0 100%;
+        width: 100%;
+    }
+    .common__mail__body {
+        min-height: 220px;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 9px 12px;
+        margin: 0 1px;
+        font-size: 13px;
+    }
+    .mail__bottom__btns .trash--btn {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    .common__tab__area.diff nav .nav-tabs {
+        width: 45%;
+        flex: 0 0 45%;
+        height: 440px;
+        max-height: 440px;
+        overflow-y: scroll;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        min-height: auto;
+        overflow-x: visible;
+        width: 100%;
+        padding: 0;
+        display: block;
+    }
+    .main_menu::-webkit-scrollbar {
+        display: none;
+    }
+    .main__area {
+        padding-bottom: 35px;
+        padding-top: 90px;
+    }
+    .header__search {
+        width: 310px;
+        height: 53px;
+        margin-left: 17px;
+        padding: 5px 3px;
+        margin-right: 10px;
+    }
+    .header__search input {
+        font-size: 15px;
+        height: 43px;
+        padding: 0 0px;
+    }
+    .head__right__btns .btn {
+        min-width: 38px;
+        height: 38px;
+        max-width: 38px;
+        margin: 0px 1px;
+    }
+    .menu__open {
+        font-size: 22px;
+        height: 40px;
+        width: 40px;
+        margin-left: -3px;
+    }
+    .common__tab__area.diff nav {
+        width: 50%;
+        flex: 0 0 50%;
+        min-height: auto;
+    }
+    .header__area {
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    .header__area .container {
+        margin-bottom: 5px;
+    }
+    .common__tab__area nav {
+        width: 280px;
+        min-height: 80vh;
+    }
+    .show__address__book a {
+        font-size: 17px;
+        padding: 7px 8px;
+        padding-right: 15px;
+    }
+    .show__address__book.m-width {
+        max-width: 244px;
+    }
+    .show__address__book a span {
+        font-size: 35px;
+        margin-right: 12px;
+    }
+    .common__tab__area.diff .nav-tabs .nav-link::before {
+        right: 7px;
+        height: 18px;
+        margin-top: 6px;
+        width: 12px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 575px) {
+    .address__book__wrapper {
+        max-width: 500px;
+        margin-right: 35px;
+        margin-bottom: 20px;
+    }
+    .book__pagination ul li {
+        margin-bottom: 5px;
+        font-size: 15px;
+    }
+    .address__book__wrapper nav {
+        width: 220px;
+        padding: 17px 17px;
+        padding-right: 17px;
+        height: 575px;
+    }
+    .main__area.addres__book__a .container-fluid {
+        padding-left: 0!important;
+    }
+    .draft__alert__wrap .common__btn {
+        font-size: 13px;
+        padding: 7px 13px;
+    }
+    .draft__alert__wrap h6 {
+        font-size: 19px;
+        margin-bottom: 23px;
+    }
+    .draft__alert__btn p {
+        font-size: 16px;
+        min-width: 113px;
+        padding-right: 10px;
+    }
+    .draft__alert__btn {
+        margin-bottom: 8px;
+    }
+    .mail__bottom__action img {
+        width: 21px;
+    }
+    .mail__bottom__action {
+        margin: 0 1px;
+    }
+    .dropdown-item {
+        font-size: 14px;
+    }
+    .main__area .container-fluid {
+        width: 575px;
+    }
+    .common__tab__area .nav-tabs .nav-link:hover, .common__tab__area.diff .nav-tabs .nav-link.active {
+        box-shadow: inset 0 0 6px 6px rgba(102, 102, 102, 0.12);
+        background: rgba(102, 102, 102, .05) !important;
+    }
+    .main__area {
+        padding-bottom: 0;
+        overflow-y: scroll;
+        margin-bottom: 30px;
+        padding-top: 90px;
+    }
+    .common__tab__area.diff nav {
+        width: 251px;
+        min-height: auto;
+    }
+    .common__mail__body {
+        min-height: 180px;
+    }
+    .common__mail__body textarea {
+        height: 180px;
+        font-size: 16px;
+    }
+    .mail--content p {
+        font-size: 16px;
+    }
+    .header__area {
+        overflow-y: auto;
+    }
+    .header__area .container {
+        margin-bottom: 5px;
+    }
+    .common__tab__area {
+        margin-bottom: 12px;
+    }
+    .common__mail__wrapper {
+        margin-bottom: 5px;
+    }
+    .mail__bottom__btns .common__btn {
+        padding: 9px 12px;
+        margin: 0 1px;
+        font-size: 12px;
+    }
+    .common__tab__area.diff nav .nav-tabs {
+        width: 45%;
+        flex: 0 0 45%;
+        height: 440px;
+        max-height: 440px;
+        overflow-y: scroll;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        min-height: auto;
+        overflow-x: visible;
+        width: 100%;
+        padding: 0;
+        display: block;
+    }
+    .show__address__book a {
+        font-size: 16px;
+        padding-right: 15px;
+    }
+    .show__address__book.m-width {
+        max-width: 232px;
+    }
+    .show__address__book a span {
+        font-size: 33px;
+        margin-right: 10px;
+    }
+    .empty-btn {
+        padding: 6px 16px;
+        border-radius: 6px;
+        margin-left: 16px;
+        font-size: 15px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 1500px) {}
