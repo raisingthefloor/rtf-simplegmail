@@ -1,3 +1,28 @@
+/**
+ Copyright 2020 Raising the Floor - International
+
+ Licensed under the New BSD license. You may not use this file except in
+ compliance with this License.
+
+ You may obtain a copy of the License at
+ https://github.com/GPII/universal/blob/master/LICENSE.txt
+
+ The R&D leading to these results received funding from the:
+ * Rehabilitation Services Administration, US Dept. of Education under
+ grant H421A150006 (APCP)
+ * National Institute on Disability, Independent Living, and
+ Rehabilitation Research (NIDILRR)
+ * Administration for Independent Living & Dept. of Education under grants
+ H133E080022 (RERC-IT) and H133E130028/90RE5003-01-00 (UIITA-RERC)
+ * European Union's Seventh Framework Programme (FP7/2007-2013) grant
+ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
+ * William and Flora Hewlett Foundation
+ * Ontario Ministry of Research and Innovation
+ * Canadian Foundation for Innovation
+ * Adobe Foundation
+ * Consumer Electronics Association Foundation
+ **/
+
 //module imports here
 const logger = require("../../../logger");
 const {google} = require('googleapis');
@@ -5,7 +30,6 @@ const GoogleManager = require("../../../Manager/GoogleManager");
 const fs = require('fs/promises');
 const formidable = require('formidable');
 const MailComposer = require("nodemailer/lib/mail-composer");
-const { data } = require("../../../logger");
 const User = require("../Models/User");
 
 
@@ -92,14 +116,21 @@ class GmailController{
     }
 
     getMails = async (req, res) => {
+        let response = {error: false, data: []};
+
         let labelIds = [req.params.type.toUpperCase()];
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
             client_id, client_secret, redirect_uris[0]);
         let allMailDetails = [];
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+
+        //get google authentication token from user
+        let googleAuthCode = JSON.parse(user.googleAuth);
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
             oAuth2Client.setCredentials(googleAuthCode);
@@ -149,12 +180,15 @@ class GmailController{
 
                 allMailDetails.push(mail_detail)
             }
+            response.data = allMailDetails;
         }
 
-    res.send(allMailDetails);
+    res.send(response);
     }
 
     getAllContacts = async (req, res) => {
+        let response = {error: false, data: []};
+
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
@@ -162,8 +196,12 @@ class GmailController{
         //an array to hold a list of authenticated user contacts
         let contacts = [];
 
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+        //get google authentication token from auth user
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+        let googleAuthCode = JSON.parse(user.googleAuth);
 
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
@@ -171,11 +209,13 @@ class GmailController{
 
             contacts = await GoogleManager.listAllConnections(oAuth2Client);
         }
-
-        res.send(contacts);
+        response.data = contacts;
+        res.send(response);
     }
 
     trashMessage = async (req, res) => {
+        let response = {error: false, data: []};
+
         //the message object representing the message that is to be trashed
         let message = {userId : req.params.uid, id: req.params.mid};
 
@@ -188,8 +228,12 @@ class GmailController{
         //The message which is trashed
         let trashedMessage = {};
         
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+        //get google authentication token from auth user
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+        let googleAuthCode = JSON.parse(user.googleAuth);
 
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
@@ -197,11 +241,13 @@ class GmailController{
 
             trashedMessage = await GoogleManager.trashMessage(message, oAuth2Client);
         }
-
-        res.send(trashedMessage);
+        response.data = trashedMessage;
+        res.send(response);
     }
 
     deleteFromTrash = async(req, res) => {
+        let response = {error: false, data: []};
+
         //the message object representing the message that is to be removed from trash
         let message = {userId : req.params.uid, id: req.params.mid};
 
@@ -214,8 +260,12 @@ class GmailController{
         //The message which is removed from trash
         let deletedMessage = {};
         
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+        //get google authentication token from auth user
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+        let googleAuthCode = JSON.parse(user.googleAuth);
 
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
@@ -223,11 +273,13 @@ class GmailController{
 
             deletedMessage = await GoogleManager.deleteFromTrash(message, oAuth2Client);
         }
-
-        res.send(deletedMessage);
+        response.data = deletedMessage;
+        res.send(response);
     }
 
     sendMail = async (req, res) => {
+        let response = {error: false, data: []};
+
         let encodedRawMail = "";
         const form = new formidable.IncomingForm();
         form.parse(req, async(err, fields, files) => {
@@ -243,9 +295,13 @@ class GmailController{
             
             //The message which is sent
             let sentMessage = {};
-            
-            //get google authentication token from file
-            let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            let googleAuthCode = JSON.parse(user.googleAuth);
 
             //check auth code is not empty
             if(Object.keys(googleAuthCode).length){
@@ -259,7 +315,8 @@ class GmailController{
                 }
 
             }
-            res.send(sentMessage);
+            response.data = sentMessage;
+            res.send(response);
         });
         
     }
@@ -294,24 +351,7 @@ class GmailController{
             attachments
         };
         let mail = new MailComposer(msg);
-        
-    
-        /*let msg = ["Content-Type: text/plain; charset=\"UTF-8\"\n",
-            "MIME-Version: 1.0\n",
-            "Content-Transfer-Encoding: 7bit\n",
-            "To: ", to, "\n",
-            "From: ", from, "\n"];
 
-        //If replyTo and references is set then this is a reply mail
-        if(replyTo && references){
-            msg.push("In-Reply-To: ", replyTo, "\n", "References: ", references, "\n");
-            subject = "Re: "+subject;
-        }
-        
-        //adding subject and body to the message string
-        msg.push("Subject: ", subject, "\n\n", body);
-    
-        msg = msg.join('');*/
         return new Promise((resolve, reject) => {
             mail.compile().build((err, msg) => {
                 if(!err){
@@ -322,19 +362,25 @@ class GmailController{
                 }
             });
         });
-        
     }
 
     getOtherContacts = async (req, res) => {
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
+        let response = {error: false, data: []};
+
+        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
             client_id, client_secret, redirect_uris[0]);
         
         let otherContacts = [];
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+
+        //get google authentication token from auth user
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+        let googleAuthCode = JSON.parse(user.googleAuth);
 
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
@@ -342,7 +388,8 @@ class GmailController{
 
             otherContacts = await GoogleManager.getOtherContacts(oAuth2Client);
         }
-        res.send(otherContacts);
+        response.data = otherContacts;
+        res.send(response);
 
     }
 
@@ -403,8 +450,12 @@ class GmailController{
         //The message whose label is modified
         let msg = {};
 
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+        //get google authentication token from auth user
+        let user = await User.findOne({_id: req.user.id});
+        if(!user){
+            response.error = true;
+        }
+        let googleAuthCode = JSON.parse(user.googleAuth);
 
         //check auth code is not empty
         if(Object.keys(googleAuthCode).length){
