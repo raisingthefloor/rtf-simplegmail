@@ -22,7 +22,7 @@ services:
     container_name: backend
     environment:
       - port=4080
-      - HOST=mongo-db
+      - HOST=mongo-db-simplegmail
       - SSL_DOMAIN=simplegmail.plenartech.com
       - NODE_LOCAL_HOST=true
     volumes:
@@ -33,7 +33,7 @@ services:
     image: mongo
     environment:
       - DOCKER=1
-    container_name: mongo-db
+    container_name: mongo-db-simplegmail
     volumes:
       - mongodb:/data/db
     ports:
