@@ -8,7 +8,7 @@ services:
       - "4000:4000"
     container_name: simplegmail_frontend
     environment:
-      - TARGET_URL=http://simplegmail_backend:4080
+      - TARGET_URL=https://simplegmail.plenartech.com:4080
       - PORT=4000
     #        - VUE_APP_ENV=development
     depends_on:
@@ -24,7 +24,7 @@ services:
       - port=4080
       - HOST=mongo-db-simplegmail
       - SSL_DOMAIN=simplegmail.plenartech.com
-      - NODE_LOCAL_HOST=true
+      - NODE_LOCAL_HOST=false
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
