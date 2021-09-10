@@ -6,9 +6,9 @@ services:
       dockerfile: Dockerfile_Frontend
     ports:
       - "4000:4000"
-    container_name: frontend
+    container_name: simplegmail_frontend
     environment:
-      - TARGET_URL=http://backend:4080
+      - TARGET_URL=http://simplegmail_backend:4080
       - PORT=4000
     #        - VUE_APP_ENV=development
     depends_on:
@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile_Backend
     ports:
       - "4080:4080"
-    container_name: backend
+    container_name: simplegmail_backend
     environment:
       - port=4080
       - HOST=mongo-db-simplegmail
