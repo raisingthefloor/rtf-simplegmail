@@ -139,14 +139,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             </div>
                             <div class="mail__bottom__actions">
                                 <div class="mail__bottom__action">
-                                    <span><img src="assets/img/format.png" alt=""></span>
+                                    <span><img src="/assets/img/format.png" alt=""></span>
                                 </div>
                                 <div class="mail__bottom__action attach--file" title="Add Attachments">
                                     <input type="file" multiple @change="attachmentSelected"/>
-                                    <span><img src="assets/img/attach.png" alt="file_attachments"></span>
+                                    <span><img src="/assets/img/attach.png" alt="file_attachments"></span>
                                 </div>
                                 <div class="mail__bottom__action">
-                                    <span><img src="assets/img/emoji.png" alt=""></span>
+                                    <span><img src="/assets/img/emoji.png" alt=""></span>
                                 </div>
                             </div>
                             <div class="mail__bottom__btns">
@@ -158,7 +158,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <button type="button" class="common__btn" @click="sendMail(true)">Save as Draft</button>
                                 <button type="button" class="common__btn">Print</button>
                                 <button type="button" class="common__btn trash--btn"><span><img
-                                            src="assets/img/trash-1.png" alt=""></span><b>Put in TRASH</b></button>
+                                            src="/assets/img/trash-1.png" alt=""></span><b>Put in TRASH</b></button>
                             </div>
                         </div>
                     </div>
@@ -171,7 +171,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
                     <div class="used__addresses">
                         <div class="used__address__top">
-                            <span><img src="assets/img/book.png" alt=""></span>
+                            <span><img src="/assets/img/book.png" alt=""></span>
                             <h6>Commonly Used Addresses </h6>
                         </div>
                         <div class="used__adresses__item">

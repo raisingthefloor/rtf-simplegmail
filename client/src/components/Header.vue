@@ -32,7 +32,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <i class="far fa-bars"></i>
                 </div>
                 <div class="logo__main">
-                    <a href=""><img src="assets/img/logo-main.png" alt=""></a>
+                    <a href=""><img src="/assets/img/logo-main.png" alt=""></a>
                 </div>
                 <div class="header__search">
                     <button type="button" class="search__button hd-btn">
@@ -108,7 +108,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <div class="header__profile">
                                 <h6>Google</h6>
                                 <div class="profile-thumb">
-                                    <img src="assets/img/profile.jpg" alt="">
+                                    <img src="/assets/img/profile.jpg" alt="">
                                 </div>
                             </div>
                         </a>

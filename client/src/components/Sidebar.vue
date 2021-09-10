@@ -29,7 +29,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
     <div class="menu__bar">
         <div class="write__email__btn">
             <router-link to="/mail-compose" class="common__btn">
-                <span><img src="assets/img/pen.png" alt=""></span>Write <br> New email
+                <span><img src="/assets/img/pen.png" alt=""></span>Write <br> New email
             </router-link>
         </div>
         <div class="main__menu__wrapper">
@@ -37,12 +37,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                 <ul>
                     <li>
                         <router-link to="/drafts">
-                            <span><img src="assets/img/pencil.png" alt=""></span>DRAFTS Not Sent
+                            <span><img src="/assets/img/pencil.png" alt=""></span>DRAFTS Not Sent
                         </router-link>
                     </li>
                     <li>
                         <router-link to="/inbox" :class="$route.name == 'Inbox' ? 'active' : ''">
-                            <span><img src="assets/img/inbox.png" alt=""></span>Inbox 
+                            <span><img src="/assets/img/inbox.png" alt=""></span>Inbox 
                             <div class="new__mail new__notifications">2 new</div>
                         </router-link>
                     </li>
@@ -53,14 +53,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </li>
                     <li>
                         <router-link to="/sent">
-                            <span><img src="assets/img/folder.png" alt=""></span>Email I SENT
+                            <span><img src="/assets/img/folder.png" alt=""></span>Email I SENT
                         </router-link>
                     </li>
-                    <li><a><span><img src="assets/img/folder.png" alt=""></span>SAVED email</a>
+                    <li><a><span><img src="/assets/img/folder.png" alt=""></span>SAVED email</a>
                     </li>
                     <li>
                         <router-link to="/trash">
-                            <span><img src="assets/img/trash-1.png" alt=""></span> email in TRASH
+                            <span><img src="/assets/img/trash-1.png" alt=""></span> email in TRASH
                         </router-link>
                     </li>
                 </ul>
@@ -71,7 +71,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         </div>
         <div class="menu__bottom">
             <a href=""><i class="fas fa-user"></i></a>
-            <a href="" class="active"><img src="assets/img/google-hangouts-logo.png" alt=""></a>
+            <a href="" class="active"><img src="/assets/img/google-hangouts-logo.png" alt=""></a>
             <a href=""><i class="fas fa-phone fa-rotate-90"></i></a>
         </div>
     </div>
