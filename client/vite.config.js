@@ -5,13 +5,13 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: '0.0.0.0',
+    host: 'simplegmail.plenartech.com',
     port: process.env.PORT || 4000,
     proxy: {
       '/api':{
         target: process.env.TARGET_URL,
         changeOrigin: true,
-        secure: false
+        secure: true
       }
     }
   }
