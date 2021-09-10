@@ -9,11 +9,8 @@ services:
     container_name: simplegmail_frontend
     environment:
       - TARGET_URL=https://simplegmail.plenartech.com:4080
-      - SSL_DOMAIN=simplegmail.plenartech.com
       - PORT=4000
     #        - VUE_APP_ENV=development
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
       - backend
   backend:
