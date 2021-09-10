@@ -43,6 +43,7 @@ export default{
   },
 
   created(){
+    this.loadGoogleClient();
     //Generate google auth code if it does not already exists
     if(!this.$store.state.appActiveUser.hasGoogleAuth){
       this.apiConnect();
@@ -63,6 +64,34 @@ export default{
           }
         })
         .catch(err => console.log(err));
+    },
+
+    loadGoogleClient(){
+      // Load the API client and auth2 library
+      gapi.load('client:auth2', this.initGoogleClient);
+    },
+
+    initGoogleClient(){
+      const {apiKey, clientId, discoveryDocs, scopes} = this.$store.state.googleCreds;
+      
+      gapi.client.init({
+        apiKey: apiKey,
+        clientId: clientId,
+        discoveryDocs: discoveryDocs,
+        scope: scopes
+      }).then(() => {
+          // Listen for sign-in state changes.
+          gapi.auth2.getAuthInstance().isSignedIn.listen(this.updateSigninStatus);
+          //console.log(gapi.auth2.getAuthInstance());
+          // Handle the initial sign-in state.
+          this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get())
+          /*authorizeButton.onclick = handleAuthClick;
+          signoutButton.onclick = handleSignoutClick;*/
+      });
+    },
+
+    updateSigninStatus(isSignedIn){
+      this.$store.commit('UPDATE_GOOGLE_AUTH_STATUS', isSignedIn);
     }
   }
 }

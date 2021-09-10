@@ -17,5 +17,10 @@ export default {
 
     updateReplyMailEntity(state, payload){
         state.replyMailEntity = payload;
+    },
+
+    UPDATE_GOOGLE_AUTH_STATUS(state, payload){
+        //payload here is a boolean value
+        state.googleCreds.isSignedIn = payload;
     }
 }

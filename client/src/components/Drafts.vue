@@ -122,7 +122,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         <button type="button" class="common__btn">Send to another</button>
                                         <button type="button" class="common__btn">Print</button>
                                         <button type="button" class="common__btn trash--btn"><span><img
-                                                    src="assets/img/trash-1.png" alt=""></span><b>Put in
+                                                    src="/assets/img/trash-1.png" alt=""></span><b>Put in
                                                 TRASH</b></button>
                                     </div>
                                 </div>
