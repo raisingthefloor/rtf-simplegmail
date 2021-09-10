@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [vue()],
     server: {
         hmr: {
-            host: 'localhost'
+            protocol: 'ws'
         },
         host: '0.0.0.0',
         port: process.env.PORT || 4000,
