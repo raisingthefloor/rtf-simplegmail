@@ -1,0 +1,13 @@
+#!/bin/bash
+FROM node:latest
+
+WORKDIR /usr/src/app/simplegmail_frontend
+
+COPY client/package*.json ./
+
+RUN npm install
+
+COPY client .
+
+EXPOSE 7000
+CMD ["npm", "run", "serve"]

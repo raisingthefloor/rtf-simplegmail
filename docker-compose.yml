@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_Frontend
+    ports:
+      - "6000:6000"
+    container_name: frontend
+#    environment:
+#        - VUE_APP_API_HOST_NAME=https://easy123.plenartech.com:2000
+#        - VUE_APP_ENV=development
+    depends_on:
+      - backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_Backend
+    ports:
+      - "6080:6080"
+    container_name: backend
+    environment:
+       - port=6080
+       - HOST=mongo-db
+#      - FRONT_URL=https://easy123.plenartech.com/
+#      - DOCKER=1
+#      - NODE_LOCAL_HOST=false
+#      - MJ_APIKEY_PUBLIC=da8c89436c3b7b0d8cc27023ff6ca9a8
+#      - MJ_APIKEY_PRIVATE=9cab25ffd9105b967bc77aec80228e02
+#      - MJ_SENDER_EMAIL=no-reply@plenartech.com
+#      - MJ_SENDER_NAME="Easy123 - Dev"
+#      - JWT_SECRET=QuOFSdpixAi46DViKzGiiboX3VriWzQV
+#      - NODE_APP_ENV=development
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - database
+  database:
+    image: mongo
+    environment:
+      - DOCKER=1
+    container_name: mongo-db
+    volumes:
+      - mongodb:/data/db
+volumes:
+  mongodb:
