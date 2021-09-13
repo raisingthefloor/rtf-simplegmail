@@ -6,10 +6,6 @@ import * as fs from "fs";
 export default defineConfig({
     plugins: [vue()],
     server: {
-        // https: {
-        //     key: fs.readFileSync(`/etc/letsencrypt/live/${process.env.SSL_DOMAIN}/privkey.pem`),
-        //     cert: fs.readFileSync(`/etc/letsencrypt/live/${process.env.SSL_DOMAIN}/cert.pem`),
-        // },
         host: '0.0.0.0',
         port: process.env.PORT || 4000,
         proxy: {
