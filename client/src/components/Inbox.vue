@@ -119,7 +119,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <button type="button" class="common__btn">Print</button>
                                     <button type="button" class="common__btn">SAVE</button>
                                     <button @click="moveToTrash(message.id)" type="button" class="common__btn trash--btn">
-                                        <span><img src="assets/img/trash-1.png" alt=""></span>
+                                        <span><img src="/assets/img/trash-1.png" alt=""></span>
                                         <b>Put in TRASH</b>
                                     </button>
                                 </div>
@@ -135,29 +135,64 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import moment from 'moment';
 import axios from 'axios';
+import { mapState } from 'vuex';
+import {Buffer} from 'buffer/';
+
 export default {
     data(){
         return{
+            messageIds: [],
             messages: [],
-            moment: moment
+            moment: moment,
+            test: []
         }
     },
 
     created(){
-        this.getInboxMessages();
-        this.getThreads();
-        this.getThreadMessages();
+        //this.getInboxMessages();
+        //this.getThreads();
+        //this.getThreadMessages();
     },
 
+    mounted(){
+        if(this.googleCreds.isSignedIn){
+            this.getInboxMessages();
+        }
+    },
+
+    computed: mapState(['googleCreds']),
+
+    watch:{
+        googleCreds: {
+            handler(newVal, oldVal){
+                if(newVal.isSignedIn){
+                    this.getInboxMessages();
+                }
+            },
+            deep: true
+        }
+    }, 
     methods:{
         getInboxMessages(){
-            axios.get('api/users/me/messages/inbox')
+            /*axios.get('api/users/me/messages/inbox')
                 .then(payload => {
                     if(!payload.data.error){
                         this.messages = payload.data.data;
                     }
                 })
-                .catch(err => console.log(err));
+                .catch(err => console.log(err));*/
+            gapi.client.gmail.users.messages.list({
+                userId: 'me',
+                labelIds: ['INBOX'],
+                maxResults: 20,
+                includeSpamTrash: false
+            })
+            .then(res => {
+                this.messageIds = res.result.messages;
+                for(const message of this.messageIds){
+                    this.getSingleProcessedMessage(message.id);
+                }
+            });
         },
 
         moveToTrash(messageId){
@@ -189,6 +224,134 @@ export default {
             axios.get('api/users/me/thread/17b9c7f7efe196b6/messages')
                 .then(payload => console.log(payload))
                 .catch(err => console.log(err))
+        },
+
+        getSingleProcessedMessage(msgId){
+            gapi.client.gmail.users.messages.get({
+                userId: 'me',
+                id: msgId
+            })
+            .then(res => {
+                let result = res.result;
+                this.messages.push(this.processMessage(result));
+            })
+            .catch(e => console.log(e));
+        },
+
+        processMessage(mail){
+            //Mail Top Level Headers
+            //const headers = mail_data.payload.headers;
+
+            //Process multipart/mixed mail
+            if(mail.payload.mimeType == "multipart/mixed"){
+                mail = this.processMultipartMixed(mail);
+            }
+            //Process multipart/alternative mail
+            else if(mail.payload.mimeType == "multipart/alternative"){
+                mail = this.processMultipartAlternative(mail);
+            }
+            //Processs text/html mail
+            else if(mail.payload.mimeType == "text/html"){
+                mail = this.processTextHtml(mail);
+            }
+            else if(mail.payload.mimeType == "multipart/related"){
+                mail = this.processMultipartRelated(mail);
+            }
+    
+            return mail;
+        },
+
+        processMultipartMixed(mail){
+            //Mail Top level headers describing the following body
+            const headers = mail.payload.headers;
+
+            //let messageId = headers.find(obj => obj.name == "Message-ID")
+            let mail_alternative = mail.payload.parts.find(x => x.mimeType == "multipart/alternative")
+            if(mail_alternative)
+            {
+                let html_part = mail_alternative.parts.find(y => y.mimeType == "text/html")
+                let buff = new Buffer.from(html_part.body.data, 'base64')
+                let text = buff.toString('utf8')
+                let attachments = mail.payload.parts.filter(obj => obj.mimeType != "multipart/alternative")
+                mail.decoded_attachments = attachments
+                mail.decoded_body = []
+                mail.decoded_body[0] = text
+            }
+            let mail_related = mail.payload.parts.find(x => x.mimeType == "multipart/related")
+            if (mail_related)
+            {
+                let textHtml = mail.payload.parts.find(obj => obj.mimeType == "text/html")
+                let buff = new Buffer.from(textHtml.body.data, 'base64')
+                let text = buff.toString('utf8');
+                mail.decoded_body = []
+                mail.decoded_body[0] = text
+            }
+
+            return mail;
+        },
+
+        processMultipartAlternative(mail){
+            if(mail.payload.body.data)
+            {
+                let buff = new Buffer.from(mail.payload.body.data, 'base64')
+                let text = buff.toString('utf8');
+                mail.decoded_body = []
+                mail.decoded_body[0] = text
+                
+            }
+            if(mail.payload.parts)
+            {
+                let obj = mail.payload.parts.find(x => x.mimeType === 'text/html')
+                if(obj){
+                    let buff = new Buffer.from(obj.body.data, 'base64');
+                    let text = buff.toString('utf8');
+                    mail.decoded_parts = []
+                    mail.decoded_parts[0] = text
+                }
+            }
+            return mail;
+        },
+        
+        processMultipartRelated(mail){
+            //check if alternative
+            let multipartAlternative = mail.payload.parts.find(obj => obj.mimeType == "multipart/alternative")
+            if(multipartAlternative)
+            {
+                if(multipartAlternative.body.data)
+                {
+                    let buff = new Buffer.from(multipartAlternative.body.data, 'base64')
+                    let text = buff.toString('utf8');
+                    mail.decoded_body = []
+                    mail.decoded_body[0] = text
+                }
+                if(multipartAlternative.parts)
+                {
+                    let obj = multipartAlternative.parts.find(x => x.mimeType === 'text/html')
+                    let buff = new Buffer.from(obj.body.data, 'base64');
+                    let text = buff.toString('utf8');
+                    mail.decoded_parts = []
+                    mail.decoded_parts[0] = text
+                }
+            }
+            //check if text/html
+            let textHtml = mail.payload.parts.find(obj => obj.mimeType == "text/html")
+            if(textHtml)
+            {
+                let buff = new Buffer.from(textHtml.body.data, 'base64')
+                let text = buff.toString('utf8');
+                mail.decoded_body = []
+                mail.decoded_body[0] = text
+            }
+            return mail;
+
+        },
+
+        processTextHtml(mail){
+            let buff = new Buffer.from(mail.payload.body.data, 'base64')
+            let text = buff.toString('utf8');
+            mail.decoded_body = []
+            mail.decoded_body[0] = text
+            return mail;
         }
     }
 }
