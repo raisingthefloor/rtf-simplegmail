@@ -34,16 +34,16 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <p>TO:</p>
                                     <div class="mail__write__input__field dropdown-container">
                                         <input name="to" id="to" v-model="mail.to" type="text" @keyup="contactSearch"/>
-                                        <div class="dropdown-content">
+                                        <div v-if="searchedContacts.length" class="dropdown-content">
                                             <div @click="contactSelected($event, 'to', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
                                                 <div class="user-avatar">
                                                     <a href="javascript:void(0)"> 
-                                                        <img :src="contact.photos[0].url" alt="profile">
+                                                        <img :src="contact.photos[0]?.url" alt="profile">
                                                     </a>
                                                 </div>
                                                 <div class="user-creds">
-                                                    <div class="user-name">{{contact.names[0].displayName}}</div>
-                                                    <div class="user-email">{{contact.emailAddresses[0].value}}</div>
+                                                    <div class="user-name" v-if="contact.names">{{contact.names[0].displayName}}</div>
+                                                    <div class="user-email" v-if="contact.emailAddresses">{{contact.emailAddresses[0].value}}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -60,16 +60,16 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <p>Send a copy to:</p>
                                     <div class="mail__write__input__field dropdown-container">
                                         <input name="cc" id="cc" v-model="mail.cc" type="text" @keyup="contactSearch" />
-                                        <div class="dropdown-content">
+                                        <div v-if="searchedContacts.length" class="dropdown-content">
                                             <div @click="contactSelected($event, 'cc', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
                                                 <div class="user-avatar">
                                                     <a href="javascript:void(0)"> 
-                                                        <img :src="contact.photos[0].url" alt="profile">
+                                                        <img :src="contact.photos[0]?.url" alt="profile">
                                                     </a>
                                                 </div>
                                                 <div class="user-creds">
-                                                    <div class="user-name">{{contact.names[0].displayName}}</div>
-                                                    <div class="user-email">{{contact.emailAddresses[0].value}}</div>
+                                                    <div class="user-name" v-if="contact.names">{{contact.names[0].displayName}}</div>
+                                                    <div class="user-email" v-if="contact.emailAddresses">{{contact.emailAddresses[0].value}}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -174,9 +174,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <span><img src="/assets/img/book.png" alt=""></span>
                             <h6>Commonly Used Addresses </h6>
                         </div>
-                        <div class="used__adresses__item">
+                        <div class="used__adresses__item" v-if="otherContacts.length">
                             <div v-for="contact in otherContacts" :key="contact.etag" class="address__item">
-                                {{contact.names[0].displayName}}
+                                {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}     
                             </div>
                         </div>
                     </div>
@@ -273,7 +273,7 @@ export default {
         getOtherContacts(){
             axios.get('api/users/me/contacts/other')
             .then(payload => {
-                this.otherContacts = payload.data;
+                this.otherContacts = payload.data.data;
             })
             .catch(err => console.log(err));
         },

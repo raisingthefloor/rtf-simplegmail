@@ -33,5 +33,6 @@ export default{
         subject: null,
         messageID: null,
         replyBody: null
-    }
+    },
+    labelName: ''
 }

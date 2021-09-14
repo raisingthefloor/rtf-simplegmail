@@ -22,5 +22,10 @@ export default {
     UPDATE_GOOGLE_AUTH_STATUS(state, payload){
         //payload here is a boolean value
         state.googleCreds.isSignedIn = payload;
+    },
+
+    //Sets the name for new folder to be created
+    UPDATE_LABEL_NAME(state, payload){
+        state.labelName = payload;
     }
 }
