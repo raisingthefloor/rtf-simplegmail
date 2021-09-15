@@ -150,8 +150,8 @@ export default {
 
     created(){
         this.getInboxMessages();
-        this.getThreads();
-        this.getThreadMessages();
+        //this.getThreads();
+        //this.getThreadMessages();
     },
 
     /*mounted(){

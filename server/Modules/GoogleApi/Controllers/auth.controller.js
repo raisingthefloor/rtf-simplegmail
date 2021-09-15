@@ -65,6 +65,27 @@ class authController{
 
         res.json(resPayload);
     }
+
+    storeGoogleCreds = async (req, res) => {
+        let resPayload = {
+            error: false,
+            data:{}
+        }
+
+        try{
+            let userInfo = await AuthManager.storeGoogleCreds(req.body);
+            const {name, email, _id, googleAuth} = userInfo;
+            let payload = {id: _id};
+            let token = AuthManager.createJWT(payload);
+            resPayload.data = {name, email, token, hasGoogleAuth: googleAuth.length ? true : false, isAuthenticated: true};
+        }
+        catch(e){
+            resPayload.error = true;
+            logger.error(`Error : ${e}`);
+        }
+
+        res.send(resPayload);
+    }
 }
 
 module.exports = new authController();

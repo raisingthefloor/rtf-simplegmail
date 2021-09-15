@@ -26,7 +26,7 @@ export default{
         email: 'mayur@raisingthefloor.org'
     },
     appActiveUser: userDefaults,
-    code: '',
+    //code: '',
     replyMailEntity: {
         to: null,
         from: null,
