@@ -1,8 +1,13 @@
 import { createWebHistory, createRouter } from "vue-router";
+import {store} from "../store/store";
+
 const routes = [
     {
         path: "/",
         component: () => import('../components/Home.vue'),
+        meta:{
+            requiresAuth: true
+        },
         children: [
             {
                 path: "/inbox",
@@ -60,4 +65,9 @@ const router = createRouter({
     routes
 });
 
+router.beforeEach((to, from) => {
+    if(to.meta.requiresAuth && !store.state.appActiveUser.isAuthenticated){
+        return {path: '/login'}
+    }
+});
 export default router;

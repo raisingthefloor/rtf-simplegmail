@@ -47,4 +47,5 @@ module.exports = router => {
     //Authentication routes
     router.post('/users/register', authController.registerUser);
     router.post('/users/login', authController.userLogin);
+    router.post('/users/store', authController.storeGoogleCreds);
 }
