@@ -142,12 +142,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
             logoutHandler(){
                 localStorage.removeItem('appActiveUser');
                 this.googleLogoutHandler();
-                this.$router.push('/login');
             },
 
             googleLogoutHandler(){
                 const auth2Instance = gapi.auth2.getAuthInstance();
                 auth2Instance.signOut();
+                this.$router.push('/login');
             },
         }
     }

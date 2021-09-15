@@ -276,7 +276,8 @@ exports.getOtherContacts = async auth => {
         }, (err, res) => {
             if(err) return logger.error('The API returned an error: '+ err);
 
-            const contacts = res.data.otherContacts;
+            const contacts = [];
+            if(res.data.otherContacts) contacts = res.data.otherContacts;
             resolve(contacts);
         });
     });

@@ -48,9 +48,9 @@ export default{
       let payload = JSON.parse(localStorage.getItem('appActiveUser'));
       this.$store.commit('UPDATE_USER', payload);
     }
-    if(!this.$store.state.appActiveUser.isAuthenticated){
+    /*if(!this.$store.state.appActiveUser.isAuthenticated){
       this.$router.push('/login');
-    } 
+    } */
     
     //request interceptors
     axios.interceptors.request.use(async config => {
