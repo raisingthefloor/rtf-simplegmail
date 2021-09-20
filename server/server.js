@@ -42,9 +42,32 @@ function startNonSSLServer() {
 function startSSLServer() {
     let sslDomain = process.env.SSL_DOMAIN
     const options = {
+        SNICallback: function (domain, cb) {
+            try {
+                console.log('🌐  SSL Domain Requested: ' + domain);
+                const securetls = tls.createSecureContext({
+                    key: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/privkey.pem`),
+                    cert: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/cert.pem`),
+                    ca: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/chain.pem`)
+                })
+                if (securetls) {
+                    if (cb) {
+                        cb(null, securetls);
+                    } else {
+                        return securetls;
+                    }
+                } else {
+                    console.log('No keys/certificates for domain requested ' + domain);
+                }
+            } catch (e) {
+                console.error(e)
+            }
+
+        },
         key: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/privkey.pem`),
         cert: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/cert.pem`),
         ca: fs.readFileSync(`/etc/letsencrypt/live/${sslDomain}/chain.pem`)
+
     }
     let server = require('https').createServer(options, app);
     server.listen(port, function () {
