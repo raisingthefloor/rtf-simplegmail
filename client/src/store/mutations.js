@@ -11,6 +11,17 @@ export default {
         //state.appActiveUser = JSON.parse(localStorage.getItem('appActiveUser'));
     },
 
+    LOGOUT_USER(state){
+        state.appActiveUser = {
+            name : "",
+            email: "",
+            token: null,
+            hasGoogleAuth: false,
+            isAuthenticated: false
+        }
+        localStorage.removeItem('appActiveUser');
+    },
+
     updateCode(state, payload){
         state.code = payload;
     },

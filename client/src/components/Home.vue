@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <Header />
-        <Sidebar />
+        <Sidebar :labels="labels" />
         <MainArea />
 
       <!-- Modal -->
@@ -65,6 +65,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 import Header from './Header.vue';
 import Sidebar from './Sidebar.vue';
 import MainArea from './MainArea.vue';
+import axios from 'axios';
 //import { mapState } from 'vuex';
 export default{
   components: {
@@ -78,16 +79,17 @@ export default{
       labels: []
     }
   },
-
-  /*created(){
-    this.loadGoogleClient();
+  
+  created(){
+    /*this.loadGoogleClient();
     //Generate google auth code if it does not already exists
     if(!this.$store.state.appActiveUser.hasGoogleAuth){
       this.apiConnect();
-    }  
+    } */
+    this.fetchGoogleLabels(); 
   },
 
-  beforeMount(){
+  /*beforeMount(){
   },*/
 
   computed: {
@@ -108,7 +110,7 @@ export default{
   },*/
 
   methods:{
-    //connects with goole api
+    //connects with google api
     /*apiConnect(){
         axios.get('api/connect')
         .then(response => {
@@ -166,28 +168,37 @@ export default{
         this.labels = res.result.labels;
       })
       .catch(e => console.log(e));
-    },
+    },*/
 
     createLabelClicked(e){
       e.preventDefault();
       if(this.labelName){
-        gapi.client.gmail.users.labels.create({
-          userId: 'me',
-          resource: {
-            "labelListVisibility": "labelShow",
-            "messageListVisibility": "show",
-            "name": this.labelName,
-            "type": "user"
+        let labelOptions = {
+          "labelListVisibility": "labelShow",
+          "messageListVisibility": "show",
+          "name": this.labelName,
+          "type": "user"
+        };
+        axios.post('api/users/me/labels/add', labelOptions)
+          .then(res => {
+            //$('#close-modal').click();
+            document.querySelector('#close-modal').click();
+            console.log(res);
+            this.fetchGoogleLabels();
+          })
+          .catch(e => console.log(e));
+      }
+    },
+
+    fetchGoogleLabels(){
+      axios('api/users/me/labels')
+        .then(res => {
+          if(!res.data.error){
+            this.labels = res.data.data;
           }
         })
-        .then(res => {
-          $('#close-modal').click();
-          console.log(res);
-          this.loadGmailLabels();
-        })
         .catch(e => console.log(e));
-      }
-    }*/
+    }
   }
 }
 </script>

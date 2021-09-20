@@ -65,7 +65,7 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach((to) => {
     if(to.meta.requiresAuth && !store.state.appActiveUser.isAuthenticated){
         return {path: '/login'}
     }

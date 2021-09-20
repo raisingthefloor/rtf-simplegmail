@@ -333,7 +333,7 @@ export default {
                 scrollingContainer: '#editor'
             });
 
-            quill.on('editor-change', (eventName, ...args) => {
+            quill.on('editor-change', (eventName) => {
                 if (eventName === 'text-change') {
                     this.mail.body = quill.root.innerHTML;
                 }

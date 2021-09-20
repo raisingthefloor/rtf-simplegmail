@@ -77,11 +77,38 @@ class authController{
             const {name, email, _id, googleAuth} = userInfo;
             let payload = {id: _id};
             let token = AuthManager.createJWT(payload);
-            resPayload.data = {name, email, token, hasGoogleAuth: googleAuth.length ? true : false, isAuthenticated: true};
+            resPayload.data = {name, email, token, hasGoogleAuth: resPayload.hasGoogleAuth, isAuthenticated: true};
         }
         catch(e){
             resPayload.error = true;
             logger.error(`Error : ${e}`);
+        }
+
+        res.send(resPayload);
+    }
+
+    checkGoogleStatus = async (req, res) => {
+        let resPayload = {
+            error: false,
+            data:{userExists: false, hasGoogleAuth: false}
+        }
+
+        try{
+            const {email, name} = req.body;
+            const user = await User.findOne({email});
+            if(user){
+                resPayload.data.userExists = true;
+                if(user.googleAuth){
+                    resPayload.data.hasGoogleAuth = true;
+
+                    let jwt = AuthManager.createJWT({id:user._id});
+                    resPayload.data.user = {name, email, token:jwt, 
+                        hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
+                }
+            }
+        }
+        catch(e){
+            resPayload.error = true;
         }
 
         res.send(resPayload);

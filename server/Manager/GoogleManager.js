@@ -31,7 +31,7 @@ exports.getToken = async function (code) {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris);
+            client_id, client_secret, redirect_uris[4]);
         oAuth2Client.getToken(code, (err, token) => {
 
             if (err) return logger.error('Error retrieving access token', err);
@@ -45,14 +45,15 @@ exports.getToken = async function (code) {
 
 exports.getUserProfile = async function (auth) {
     return new Promise((resolve, reject) => {
-        const gmail = google.gmail({version: 'v1', auth})
+        //Instantiate the google's people service object
+        const peopleService = google.people({version: 'v1', auth});
 
-        gmail.users.getProfile({
-            userId: "me",
+        peopleService.people.get({
+            resourceName: 'people/me',
+            personFields: 'names,emailAddresses',
         }, (err, res) => {
-            if (err) return logger.error('The API returned an error: ' + err + 'Error while fetching profile')
-
-            resolve(res.data)
+            if (err) return logger.error('The API returned an error: ' + err + 'Error while fetching profile');
+            else resolve(res.data);
         })
     })
 }
@@ -276,7 +277,7 @@ exports.getOtherContacts = async auth => {
         }, (err, res) => {
             if(err) return logger.error('The API returned an error: '+ err);
 
-            const contacts = [];
+            let contacts = [];
             if(res.data.otherContacts) contacts = res.data.otherContacts;
             resolve(contacts);
         });
@@ -430,6 +431,42 @@ exports.modifyLabels = async (params, auth) => {
             else{
                 logger.error('The API returened with error: ', err);
                 reject({});
+            }
+        });  
+    });
+}
+
+exports.getLabels = async auth => {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({version: 'v1', auth});
+        gmail.users.labels.list({
+            userId: 'me'
+        }, (err, res) => {
+            if(!err){
+                resolve(res.data.labels);
+            }
+            else{
+                logger.error('The API returened with error: ', err);
+                reject([]);
+            }
+        });  
+    });
+}
+
+exports.addLabels = async (labelOptions, auth) => {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({version: 'v1', auth});
+        gmail.users.labels.create({
+            userId: 'me',
+            resource: labelOptions
+        }, (err, res) => {
+            if(!err){
+                console.log(res.data)
+                resolve(res.data);
+            }
+            else{
+                logger.error('The API returened with error: ', err);
+                reject([]);
             }
         });  
     });
