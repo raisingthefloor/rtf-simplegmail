@@ -31,7 +31,7 @@ exports.getToken = async function (code) {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[4]);
+            client_id, client_secret, redirect_uris[1]);
         oAuth2Client.getToken(code, (err, token) => {
 
             if (err) return logger.error('Error retrieving access token', err);
