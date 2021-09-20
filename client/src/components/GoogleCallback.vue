@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div class="text-center mt-4">
         <main class="form-signin">
-            <h1 class="h3 mb-3 fw-normal mt-2">Processing...</h1>
+            <div class="loader">Please wait...</div>
         </main>
     </div>
 </template>

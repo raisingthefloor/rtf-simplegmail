@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <div class="common__area ">
-            <div class="common__tab__area diff">
+            <div class="common__tab__area diff" v-if="messages.length">
                 <nav>
                     <div class="nav__title">
                         <h5>email in <b>INBOX</b></h5>
@@ -46,8 +46,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </button>
                     </div>
                 </nav>
-                <div class="tab-content" id="nav-tabContent">
-                    <div v-for="(message, index) in messages" :key="index" :class="['tab-pane', 'fade', index == 0 ? 'active show' : '']" :id="'nav-home-'+index" role="tabpanel"
+                <div class="tab-content" id="nav-tabContent" v-if="messages.length">
+                    <div  v-for="(message, index) in messages" :key="index" :class="['tab-pane', 'fade', index == 0 ? 'active show' : '']" :id="'nav-home-'+index" role="tabpanel"
                         aria-labelledby="nav-home-tab">
                         <div class="common__mail__wrapper">
                             <div class="mail__details__blk position-relative">
@@ -128,6 +128,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
                 </div>
             </div> 
+            <div v-else class="loader">
+                Loading
+                <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
+            </div>
         </div>
     </div>
 </template>

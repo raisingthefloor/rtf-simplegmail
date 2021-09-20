@@ -252,7 +252,35 @@ export default {
             }
 
             axios.post('api/users/me/messages/send', payload, {headers})
-            .then(payload => console.log(payload.data))
+            .then(res => {
+                if(!res.data.error && res.data.data.id){
+                    if(saveAsDraft){
+                        alert("Message Saved as Draft!");
+                    }
+                    else{
+                        alert("Message sent successfully!");
+                    }
+
+                    //resetting mail object
+                    this.mail = {
+                        to: null,
+                        from: this.$store.state.user.email,
+                        cc: null,
+                        subject: null,
+                        body: null,
+                        replyBody: null,
+                        replyTo: null,
+                        references: null,
+                        attachments: []
+                        //date: Date.now()
+                    }
+
+                    let element = document.getElementsByClassName("ql-editor");
+                    element[0].innerHTML = "";
+                }
+
+                
+            })
             .catch(err => console.log(err));
         },
 

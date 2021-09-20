@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <div class="common__area ">
-                <div class="common__tab__area diff">
+                <div v-if="messages.length" class="common__tab__area diff">
                     <nav>
                         <div class="nav__title">
                             <h5>email I SENT others</h5>
@@ -129,6 +129,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             </div>
                         </div>
                     </div>
+                </div>
+                <div v-else class="loader">
+                    Loading
+                    <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
                 </div>
             </div>
     </div>
