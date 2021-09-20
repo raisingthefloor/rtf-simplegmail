@@ -24,7 +24,7 @@ services:
       - port=4080
       - HOST=mongo-db-simplegmail
       - SSL_DOMAIN=simplegmail.plenartech.com
-      - NODE_LOCAL_HOST=true
+      - NODE_LOCAL_HOST=false
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
