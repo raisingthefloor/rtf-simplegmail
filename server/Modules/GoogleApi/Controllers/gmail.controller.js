@@ -36,15 +36,18 @@ const User = require("../Models/User");
 
 //Controller definition
 class GmailController{
+    redirectUrl = '';
     SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://mail.google.com/',
         'https://www.googleapis.com/auth/contacts', 'https://www.googleapis.com/auth/contacts.other.readonly',
         'profile', "https://www.googleapis.com/auth/userinfo.email"];
 
     //return OAuth2Client which request the google server for resources
-    getOAuth2Client(){
+    getOAuth2Client = () => {
+        
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
+        let redirectUrlIndex = redirect_uris.findIndex(uri => this.redirectUrl === uri);
         return new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
     }
 
@@ -100,6 +103,7 @@ class GmailController{
             data: {}
         }
         let authUrl = '';
+        this.redirectUrl = req.headers['x-forwarded-proto']+'://'+req.headers['x-forwarded-host']+'/googlecallback';
         try{
             const oAuth2Client = this.getOAuth2Client();
             authUrl = oAuth2Client.generateAuthUrl({
@@ -149,7 +153,6 @@ class GmailController{
     }*/
     googleCallback = async(req, res) => {
         let userProfile = {}, response = {error: false, data:{}};
-        console.log(req);
         try{
             //get access token and refresh token in exchange of authorization code
             const token = await GoogleManager.getToken(req.body.code);
@@ -231,7 +234,8 @@ class GmailController{
                 let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail)
                 //console.log("getSingleProcessedMessageDetails", mail_detail)
                 let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
-                if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                //Temporarily disabling parse attachment section
+                /*if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
                 {
                     let i = 0
                     for (let attachment of mail_detail.decoded_attachments)
@@ -240,7 +244,7 @@ class GmailController{
                         mail_detail.decoded_attachments[i].attachment_data = attachment_data
                         i++
                     }
-                }
+                }*/
 
                 /*console.log("decoded_related_images", mail_detail.decoded_related_images)
                 console.log("datatype ", mail_detail.decoded_related_images, typeof mail_detail.decoded_related_images, Array.isArray(mail_detail.decoded_related_images))*/
@@ -274,10 +278,7 @@ class GmailController{
     getAllContacts = async (req, res) => {
         let response = {error: false, data: []};
 
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         //an array to hold a list of authenticated user contacts
         let contacts = [];
 
@@ -304,11 +305,7 @@ class GmailController{
         //the message object representing the message that is to be trashed
         let message = {userId : req.params.uid, id: req.params.mid};
 
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         
         //The message which is trashed
         let trashedMessage = {};
@@ -336,11 +333,7 @@ class GmailController{
         //the message object representing the message that is to be removed from trash
         let message = {userId : req.params.uid, id: req.params.mid};
 
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         
         //The message which is removed from trash
         let deletedMessage = {};
@@ -372,11 +365,7 @@ class GmailController{
             const attachments = this.parseAttachments(files);
             encodedRawMail = await this.formatMail(fields, attachments);
 
-            let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-            const {client_secret, client_id, redirect_uris} = credentials.web
-            //using OAuthClient object for authentication and authorization
-            const oAuth2Client = new google.auth.OAuth2(
-                client_id, client_secret, redirect_uris[1]);
+            const oAuth2Client = this.getOAuth2Client();
             
             //The message which is sent
             let sentMessage = {};
@@ -452,11 +441,7 @@ class GmailController{
     getOtherContacts = async (req, res) => {
         let response = {error: false, data: []};
 
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-        const {client_secret, client_id, redirect_uris} = credentials.web;
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         
         let otherContacts = [];
 
@@ -479,11 +464,7 @@ class GmailController{
     }
 
     getThreads = async (req, res) => {
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web;
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         
         let threads = [];
         //get google authentication token from file
@@ -500,11 +481,7 @@ class GmailController{
     }
 
     getThreadMessages = async(req, res) => {
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web;
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
         
         let thread = {};
         //get google authentication token from file
@@ -526,11 +503,7 @@ class GmailController{
             removeLabelIds: req.body.removeLabelIds
         };
 
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-        const {client_secret, client_id, redirect_uris} = credentials.web;
-        //using OAuthClient object for authentication and authorization
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        const oAuth2Client = this.getOAuth2Client();
 
         //The message whose label is modified
         let msg = {};
