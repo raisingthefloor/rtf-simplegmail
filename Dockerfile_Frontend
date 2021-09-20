@@ -7,6 +7,5 @@ COPY client/package*.json ./
 RUN npm install
 
 COPY client .
-RUN npm run build
 EXPOSE 4000
 CMD ["npm", "run", "serve", "--", "--port", "4000"]
