@@ -27,6 +27,7 @@
 const logger = require("../../../logger");
 const {google} = require('googleapis');
 const GoogleManager = require("../../../Manager/GoogleManager");
+const AuthManager = require("../../../Manager/AuthManager");
 const fs = require('fs/promises');
 const formidable = require('formidable');
 const MailComposer = require("nodemailer/lib/mail-composer");
@@ -36,14 +37,24 @@ const User = require("../Models/User");
 //Controller definition
 class GmailController{
     SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://mail.google.com/',
-        'https://www.googleapis.com/auth/contacts', 'https://www.googleapis.com/auth/contacts.other.readonly'];
+        'https://www.googleapis.com/auth/contacts', 'https://www.googleapis.com/auth/contacts.other.readonly',
+        'profile', "https://www.googleapis.com/auth/userinfo.email"];
+
+    //return OAuth2Client which request the google server for resources
+    getOAuth2Client(){
+        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        const {client_secret, client_id, redirect_uris} = credentials.web;
+        //using OAuthClient object for authentication and authorization
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+    }
+
     //methods to handle requests
     /**
      * @route GET /api/connect
      * @desc connects with googleapis 
      * @access shoould be private
      */
-    apiConnect = async (req, res) => {
+    /*apiConnect = async (req, res) => {
         let response = {
             error: false,
             data: {}
@@ -51,7 +62,7 @@ class GmailController{
         let generateURL = false;
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
         const {client_secret, client_id, redirect_uris} = credentials.web;
-        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris);
         let authUrl = '';
         try{
             let user = await User.findOne({_id: req.user.id});
@@ -65,7 +76,6 @@ class GmailController{
             }
         }
         catch(err){
-            generateURL = true;
             response.error = true;
             response.data = err;
         }
@@ -82,16 +92,39 @@ class GmailController{
             response.data.hasGoogleAuth = true;
         }
         res.send(response)
+    }*/
+
+    googleConnect = async (req, res) => {
+        let response = {
+            error: false,
+            data: {}
+        }
+        let authUrl = '';
+        try{
+            const oAuth2Client = this.getOAuth2Client();
+            authUrl = oAuth2Client.generateAuthUrl({
+                access_type: 'offline',
+                scope: this.SCOPES,
+                prompt: 'consent'
+            });
+            response.url = authUrl;
+        }
+        catch(e){
+            response.error = true;
+        }
+
+        res.send(response);
     }
 
-    apiGoogleCallback = async (req, res) => {
+    /*apiGoogleCallback = async (req, res) => {
+        //get access token and refresh token in exchange of authorization code
         const token = await GoogleManager.getToken(req.body.code);
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
         const {client_secret, client_id, redirect_uris} = credentials.web;
         let oAuth2Client = "", userProfile = {}, response = {error: false, data:{}};
         if(token){
             oAuth2Client = new google.auth.OAuth2(
-                client_id, client_secret, redirect_uris[0])
+                client_id, client_secret, redirect_uris)
             oAuth2Client.setCredentials(token)
 
             //get user profile
@@ -113,6 +146,58 @@ class GmailController{
 
         }
         res.send(response);
+    }*/
+    googleCallback = async(req, res) => {
+        let userProfile = {}, response = {error: false, data:{}};
+        console.log(req);
+        try{
+            //get access token and refresh token in exchange of authorization code
+            const token = await GoogleManager.getToken(req.body.code);
+            const oAuth2Client = this.getOAuth2Client();
+            oAuth2Client.setCredentials(token)
+            
+            //get user profile
+            userProfile = await GoogleManager.getUserProfile(oAuth2Client);
+            let name = userProfile.names[0]?.displayName;
+            let email = userProfile.emailAddresses[0]?.value;
+            response.data = {name, email};
+            
+            //find the user by id
+            let user = await User.findOne({email});
+            user = await this.storeOrUpdateUser({user, name, email, token});
+            let jwt = AuthManager.createJWT({id:user._id});
+            response.data = {name, email, token:jwt, 
+                hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
+        }
+        catch(e){
+            response.error = true
+        }
+
+        res.send(response);
+    }
+
+    storeOrUpdateUser = async({user, name, email, token}) => {
+        try{
+            token = JSON.stringify(token);
+            if(!user){
+                const newUser = new User({
+                    name,
+                    email,
+                    googleAuth: token
+                });
+    
+                await newUser.save();
+            }
+            else{
+                //saving the token in user object
+                user.googleAuth = token;
+                await user.save();
+            }
+            return user;
+        }
+        catch(e){
+            logger.error(`Error while creating new user : ${e}`);
+        }
     }
 
     getMails = async (req, res) => {
@@ -122,7 +207,7 @@ class GmailController{
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         let allMailDetails = [];
         let user = await User.findOne({_id: req.user.id});
         if(!user){
@@ -192,7 +277,7 @@ class GmailController{
         let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         //an array to hold a list of authenticated user contacts
         let contacts = [];
 
@@ -223,7 +308,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         
         //The message which is trashed
         let trashedMessage = {};
@@ -255,7 +340,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         
         //The message which is removed from trash
         let deletedMessage = {};
@@ -291,7 +376,7 @@ class GmailController{
             const {client_secret, client_id, redirect_uris} = credentials.web
             //using OAuthClient object for authentication and authorization
             const oAuth2Client = new google.auth.OAuth2(
-                client_id, client_secret, redirect_uris[0]);
+                client_id, client_secret, redirect_uris[1]);
             
             //The message which is sent
             let sentMessage = {};
@@ -371,7 +456,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         
         let otherContacts = [];
 
@@ -398,7 +483,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         
         let threads = [];
         //get google authentication token from file
@@ -419,7 +504,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
         
         let thread = {};
         //get google authentication token from file
@@ -445,7 +530,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[0]);
+            client_id, client_secret, redirect_uris[1]);
 
         //The message whose label is modified
         let msg = {};
@@ -465,6 +550,69 @@ class GmailController{
         }
         res.send(msg);
 
+    }
+
+    getLabels = async (req, res) => {
+        let response = {error: false, data: []};
+        let oAuth2Client = this.getOAuth2Client();
+
+        //Gmail Labels
+        let labels = [];
+        try{
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+
+                    labels = await GoogleManager.getLabels(oAuth2Client);
+                }
+            }
+            response.data = labels;
+        }
+        catch(e){
+            logger.error(`Error while fetching labels : ${e}`);
+            response.error = true;
+        }
+        
+        res.send(response);
+    }
+
+    addLabels = async (req, res) => {
+        let response = {error: false, data: []};
+        let oAuth2Client = this.getOAuth2Client();
+
+        //Newly created gmail label
+        let label = {};
+        try{
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+
+                    label = await GoogleManager.addLabels(req.body, oAuth2Client);
+                }
+            }
+            response.data = label;
+        }
+        catch(e){
+            response.error = true;
+        }
+        
+        res.send(response);
     }
 }
 

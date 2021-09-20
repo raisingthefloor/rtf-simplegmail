@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type: String,
-        required: true
+        //required: true
     },
     googleAuth: {
         type: String,
@@ -57,7 +57,6 @@ const userSchema = new mongoose.Schema({
     },
     deletedAt:{
         type: Date,
-        default: Date.now
     },
 });
 

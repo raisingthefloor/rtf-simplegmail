@@ -26,15 +26,47 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <Header />
-        <Sidebar />
+        <Sidebar :labels="labels" />
         <MainArea />
+
+      <!-- Modal -->
+      <div class="modal fade add__folder__popup" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+          aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">New Folder</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                      <div class="single-input-item">
+                          <input type="text" v-model="labelName" class="int">
+                      </div>
+                      <div class="single-input-item">
+                          <select class="form-select int" name="" id="">
+                              <option v-for="number in 4" :key="number" :option="number">{{number}}</option>
+                          </select>
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" id="close-modal" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary" @click="createLabelClicked"
+                        :class="[!$store.state.labelName.length ? 'disabled-btn' : '']" :disabled="!$store.state.labelName.length">
+                        Create</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!--Modal End-->
     </div>
 </template>
 <script>
-import axios from 'axios';
+//import axios from 'axios';
 import Header from './Header.vue';
 import Sidebar from './Sidebar.vue';
 import MainArea from './MainArea.vue';
+import axios from 'axios';
+//import { mapState } from 'vuex';
 export default{
   components: {
     Header,
@@ -42,17 +74,44 @@ export default{
     MainArea
   },
 
+  data(){
+    return {
+      labels: []
+    }
+  },
+  
   created(){
-    this.loadGoogleClient();
+    /*this.loadGoogleClient();
     //Generate google auth code if it does not already exists
     if(!this.$store.state.appActiveUser.hasGoogleAuth){
       this.apiConnect();
-    }  
+    } */
+    this.fetchGoogleLabels(); 
   },
 
+  /*beforeMount(){
+  },*/
+
+  computed: {
+    labelName:{
+      get(){
+        return this.$store.getters.labelName;
+      },
+      set(value){
+        this.$store.commit('UPDATE_LABEL_NAME', value);
+      }
+    },
+
+    //...mapState(['googleCreds'])
+  },
+
+  /*watch:{
+    
+  },*/
+
   methods:{
-    //connects with goole api
-    apiConnect(){
+    //connects with google api
+    /*apiConnect(){
         axios.get('api/connect')
         .then(response => {
           if(response.data.data.url?.length && confirm("Do you want to connect with google ?")){
@@ -85,13 +144,60 @@ export default{
           //console.log(gapi.auth2.getAuthInstance());
           // Handle the initial sign-in state.
           this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get())
-          /*authorizeButton.onclick = handleAuthClick;
-          signoutButton.onclick = handleSignoutClick;*/
       });
     },
 
     updateSigninStatus(isSignedIn){
       this.$store.commit('UPDATE_GOOGLE_AUTH_STATUS', isSignedIn);
+      if(isSignedIn) this.loadGmailLabels();
+    },
+
+    googleLoginHandler(){
+      gapi.auth2.getAuthInstance().signIn();
+    },
+
+    googleLogoutHandler(){
+      gapi.auth2.getAuthInstance().signOut();
+    },
+
+    loadGmailLabels(){
+      gapi.client.gmail.users.labels.list({
+        userId: 'me'
+      })
+      .then(res => {
+        this.labels = res.result.labels;
+      })
+      .catch(e => console.log(e));
+    },*/
+
+    createLabelClicked(e){
+      e.preventDefault();
+      if(this.labelName){
+        let labelOptions = {
+          "labelListVisibility": "labelShow",
+          "messageListVisibility": "show",
+          "name": this.labelName,
+          "type": "user"
+        };
+        axios.post('api/users/me/labels/add', labelOptions)
+          .then(res => {
+            //$('#close-modal').click();
+            document.querySelector('#close-modal').click();
+            console.log(res);
+            this.fetchGoogleLabels();
+          })
+          .catch(e => console.log(e));
+      }
+    },
+
+    fetchGoogleLabels(){
+      axios('api/users/me/labels')
+        .then(res => {
+          if(!res.data.error){
+            this.labels = res.data.data;
+          }
+        })
+        .catch(e => console.log(e));
     }
   }
 }

@@ -14,7 +14,7 @@ const googleDefaults = {
             "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"],
 
     clientId: '417728105098-urn8v0e481l1mthrs3i3ltn1jumpejsk.apps.googleusercontent.com',
-    scopes: 'profile https://mail.google.com/ https://www.googleapis.com/auth/gmail.modify',
+    scopes: 'profile https://mail.google.com/ https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/contacts.other.readonly',
     isSignedIn: false
 }
 
@@ -26,12 +26,13 @@ export default{
         email: 'mayur@raisingthefloor.org'
     },
     appActiveUser: userDefaults,
-    code: '',
+    //code: '',
     replyMailEntity: {
         to: null,
         from: null,
         subject: null,
         messageID: null,
         replyBody: null
-    }
+    },
+    labelName: ''
 }

@@ -34,7 +34,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         </div>
         <div class="main__menu__wrapper">
             <div class="main_menu">
-                <ul>
+                <!-- <ul>
                     <li>
                         <router-link to="/drafts">
                             <span><img src="/assets/img/pencil.png" alt=""></span>DRAFTS Not Sent
@@ -56,11 +56,22 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <span><img src="/assets/img/folder.png" alt=""></span>Email I SENT
                         </router-link>
                     </li>
-                    <li><a><span><img src="/assets/img/folder.png" alt=""></span>SAVED email</a>
+                    <li>
+                        <a><span><img src="/assets/img/folder.png" alt=""></span>SAVED email</a>
                     </li>
                     <li>
                         <router-link to="/trash">
                             <span><img src="/assets/img/trash-1.png" alt=""></span> email in TRASH
+                        </router-link>
+                    </li>
+                </ul> -->
+                <ul>
+                    <li v-for="label in filteredLabels" :key="label.id">
+                        <router-link :to="`/${label.route}`" :class="$route.path == '/'+label.route ? 'active' : ''">
+                            <span>
+                                <img v-if="label.imgSrc" :src="label.imgSrc" :alt="label.id">
+                            </span> 
+                            {{label.text}}
                         </router-link>
                     </li>
                 </ul>
@@ -80,6 +91,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 </template>
 
 <script>
+//import { mapGetters } from 'vuex'
 export default {
     data(){
         return{
@@ -87,6 +99,76 @@ export default {
         };
     },
 
+    props:{
+        labels:{
+            type: Array,
+            required: true
+        }
+    },
+
+    computed:{
+        filteredLabels(){
+            if(this.labels.length){
+                return this.labels.filter(label => {
+                    if(label.name == "TRASH" || label.name == "SPAM") return true;
+                    else if(label.name == "STARRED" || label.name == "UNREAD") return false;
+                    return label.labelListVisibility != "labelHide"; 
+                }).map(label => {
+                    let text = "", route = label.name.toLowerCase(), imgSrc="/assets/img/";
+                    if(label.name == "SENT"){
+                        text = "Email I SENT";
+                        imgSrc += "folder.png";
+                    }
+                    else if(label.name == "INBOX"){
+                        text = "Inbox";
+                        imgSrc += "inbox.png";
+                    }
+                    else if(label.name == "TRASH"){
+                        text = "email in TRASH";
+                        imgSrc += "trash-1.png";
+                    }
+                    else if(label.name == "SPAM"){
+                        route = "";
+                        text = "? Junk mail ?";
+                        imgSrc = null;
+                    }
+                    else if(label.name == "DRAFT"){
+                        imgSrc += "pencil.png";
+                        route += 's';
+                        text = "DRAFTS Not Sent";
+                    }
+                    else{
+                        imgSrc += "folder.png";
+                        text = label.name; 
+                    }
+                    return Object.assign({}, label, {text, route, imgSrc});
+                });
+            }
+            else{
+                return [];
+            }
+        },
+
+        /*...mapGetters(['isGoogleSignedIn'])*/
+    },
+
     methods: {}
 }
 </script>
+
+<style scoped>
+    .main_menu::-webkit-scrollbar{
+      display:block;
+      width:8px;
+    }
+    .main_menu::-webkit-scrollbar-track {
+      -webkit-box-shadow:inset 0 0 6px gray; 
+      box-shadow: inset 0 0 6px gray;
+      border-radius:5px;
+    }
+    .main_menu::-webkit-scrollbar-thumb {
+      border-radius:5px;
+      -webkit-box-shadow: inset 0 0 6px white; 
+      box-shadow: inset 0 0 6px white;
+    }
+</style>

@@ -58,24 +58,25 @@ exports.login = async (reqPayload) => {
         if(!user){
             result = "User with given mail address not found";
         }
-
-        let match = await bcrypt.compare(password, user.password);
-        if(match){
-            //Create JWT
-            let payload = {
-                id: user._id
-            }
-            let token = createJWT(payload);
-            result = {
-                name: user.name,
-                email: user.email,
-                token: token,
-                hasGoogleAuth: user.googleAuth.length ? true : false,
-                isAuthenticated: true
-            }
-        }
         else{
-            result = "Incorrect User Credentials";
+            let match = await bcrypt.compare(password, user.password);
+            if(match){
+                //Create JWT
+                let payload = {
+                    id: user._id
+                }
+                let token = createJWT(payload);
+                result = {
+                    name: user.name,
+                    email: user.email,
+                    token: token,
+                    hasGoogleAuth: user.googleAuth.length ? true : false,
+                    isAuthenticated: true
+                }
+            }
+            else{
+                result = "Incorrect User Credentials";
+            }
         }
     }
     catch(err){
@@ -95,3 +96,31 @@ function createJWT(payload){
 }
 
 exports.createJWT = createJWT;
+
+exports.storeGoogleCreds = async (reqPayload) => {
+    const {authResponse, googleProfile} = reqPayload;
+    //get user from email id
+    try{
+        const user = await User.findOne({email: googleProfile.email});
+
+        //If user does not exist create a new store and store googleCreds
+        if(!user){
+            const newUser = new User({
+                name: googleProfile.name,
+                email: googleProfile.email
+            });
+
+            await newUser.save();
+            user = newUser;
+        }
+        //update the googleAuth field of user with googleCreds
+        else{
+            user.googleAuth = JSON.stringify(authResponse);
+            await user.save();
+        }
+        return user;
+    }
+    catch(e){
+        logger.error(`Error: ${e}`);
+    }
+}

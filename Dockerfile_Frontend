@@ -1,6 +1,5 @@
 #!/bin/bash
 FROM node:latest
-RUN npm install -g http-server
 WORKDIR /usr/src/app/simplegmail_frontend
 
 COPY client/package*.json ./
@@ -10,4 +9,4 @@ RUN npm install
 COPY client .
 RUN npm run build
 EXPOSE 4000
-CMD [ "http-server", "dist", "-p", "4000", "-P", "http://localhost:4000?"  ]
+CMD ["npm", "run", "serve", "--", "--port", "4000"]

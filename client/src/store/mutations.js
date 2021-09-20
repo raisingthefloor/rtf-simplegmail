@@ -11,6 +11,17 @@ export default {
         //state.appActiveUser = JSON.parse(localStorage.getItem('appActiveUser'));
     },
 
+    LOGOUT_USER(state){
+        state.appActiveUser = {
+            name : "",
+            email: "",
+            token: null,
+            hasGoogleAuth: false,
+            isAuthenticated: false
+        }
+        localStorage.removeItem('appActiveUser');
+    },
+
     updateCode(state, payload){
         state.code = payload;
     },
@@ -22,5 +33,10 @@ export default {
     UPDATE_GOOGLE_AUTH_STATUS(state, payload){
         //payload here is a boolean value
         state.googleCreds.isSignedIn = payload;
+    },
+
+    //Sets the name for new folder to be created
+    UPDATE_LABEL_NAME(state, payload){
+        state.labelName = payload;
     }
 }

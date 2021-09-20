@@ -135,8 +135,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import moment from 'moment';
 import axios from 'axios';
-import { mapState } from 'vuex';
-import {Buffer} from 'buffer/';
+/*import { mapState } from 'vuex';
+import {Buffer} from 'buffer/';*/
 
 export default {
     data(){
@@ -149,12 +149,12 @@ export default {
     },
 
     created(){
-        //this.getInboxMessages();
+        this.getInboxMessages();
         //this.getThreads();
         //this.getThreadMessages();
     },
 
-    mounted(){
+    /*mounted(){
         if(this.googleCreds.isSignedIn){
             this.getInboxMessages();
         }
@@ -171,17 +171,17 @@ export default {
             },
             deep: true
         }
-    }, 
+    },*/ 
     methods:{
         getInboxMessages(){
-            /*axios.get('api/users/me/messages/inbox')
+            axios.get('api/users/me/messages/inbox')
                 .then(payload => {
                     if(!payload.data.error){
                         this.messages = payload.data.data;
                     }
                 })
-                .catch(err => console.log(err));*/
-            gapi.client.gmail.users.messages.list({
+                .catch(err => console.log(err));
+            /*gapi.client.gmail.users.messages.list({
                 userId: 'me',
                 labelIds: ['INBOX'],
                 maxResults: 20,
@@ -192,7 +192,7 @@ export default {
                 for(const message of this.messageIds){
                     this.getSingleProcessedMessage(message.id);
                 }
-            });
+            });*/
         },
 
         moveToTrash(messageId){
@@ -226,7 +226,7 @@ export default {
                 .catch(err => console.log(err))
         },
 
-        getSingleProcessedMessage(msgId){
+        /*getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({
                 userId: 'me',
                 id: msgId
@@ -352,7 +352,7 @@ export default {
             mail.decoded_body = []
             mail.decoded_body[0] = text
             return mail;
-        }
+        }*/
     }
 }
 </script>

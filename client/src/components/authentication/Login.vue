@@ -24,7 +24,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 -->
 
 <template>
-   <div class="text-center" style="display: flex; align-items: center; padding-top: 40px; padding-bottom: 40px">
+  <div class="text-center" style="display: flex; align-items: center; padding-top: 40px; padding-bottom: 40px">
     <main class="form-signin">
       <form @submit.prevent="onSubmit">
         <h1 class="h3 mb-3 fw-normal">Login</h1>
@@ -50,7 +50,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="form-floating">
           <p style="color: red" v-show="showError">{{ $t('please_enter_correct_username_or_password') }}</p>
         </div> -->
-        <div class="form-floating">
+        <!-- <div class="form-floating">
           <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" v-model="user.email" autofocus>
           <label for="floatingInput">Email Address</label>
         </div>
@@ -61,15 +61,21 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
         <button class="w-100 btn btn-lg btn-primary" type="submit">
           <span>Submit</span>
-          <!-- <span v-if="loginSubmitClicked">{{ $t('processing') }}</span> -->
+          <span v-if="loginSubmitClicked">{{ $t('processing') }}</span>
         </button>
- <div>
+        <hr /> -->
+        <div @click="googleConnect" id="gSignInWrapper" class="mt-2">
+          <div id="customBtn" class="customGPlusSignIn ">
+            <span class="icon"></span>
+            <span class="buttonText">{{gBtnTxt}}</span>
+          </div>
+        </div>
         
-    </div>
-        <p class="mt-4">Not a user? <router-link to="/register">Register</router-link> </p>
+        <!-- <p class="mt-4">Not a user? <router-link to="/register">Register</router-link> </p> -->
 
       </form>
     </main>
+    
   </div>
 </template>
 
@@ -81,12 +87,28 @@ export default {
           user:{
             email: null,
             password: null
-          }
+          },
+          gBtnTxt: 'Sign In With Google'
         }
     },
 
+    mounted(){
+      //this.renderGoogleButton();
+      //this.loadGoogleClient();
+    },
+
     methods:{
-      onSubmit(){
+      googleConnect(){
+        axios.get('api/connect')
+        .then(res => {
+          if(!res.data.error && res.data.url){
+            window.location.href = res.data.url;
+          }
+        })
+        .catch(err => console.log(err));
+      },
+
+      /*onSubmit(){
         //this.$router.push('/inbox');
         axios.post(`api/users/login`, this.user)
           .then(payload => {
@@ -96,7 +118,164 @@ export default {
             }
           })
           .catch(e => console.log(e));
-      }
+      },*/
+
+      /*loadGoogleClient(){
+        // Load the API client auth2 library
+        this.gBtnTxt = "Please wait...";
+        gapi.load('auth2', this.initGoogleClient);
+      },
+
+      gSignIn(promptType){
+        gapi.auth2.getAuthInstance().signIn({prompt: promptType})
+        .then(googleUser => {
+          this.checkHasGoogleAuth(googleUser);   
+        })
+        .catch(e => console.log(e))
+      },
+
+      initGoogleClient(){
+        const {clientId, discoveryDocs, scopes} = this.$store.state.googleCreds;
+        gapi.auth2.init({
+          client_id: clientId,
+          discoveryDocs: discoveryDocs,
+          scope: scopes,
+          //response_type: 'code'
+        }).then((res) => {
+          const authInstance = window.gapi.auth2.getAuthInstance();
+          authInstance.grantOfflineAccess()
+          .then((res) => {
+            this.googleCallback(res.code);
+          })
+          this.gSignIn();
+          //this.checkHasGoogleAuth();
+        })
+        //this.attachSignInHandler(document.getElementById('customBtn'));
+      },
+
+      gAuthorize(){
+        const {clientId, discoveryDocs, scopes} = this.$store.state.googleCreds;
+        gapi.auth2.authorize({
+          client_id: clientId,
+          //discoveryDocs: discoveryDocs,
+          scope: scopes,
+          redirect_uri: 'http://localhost:3000/googlecallback',
+          response_type: 'code'
+        }, (res) => {
+          this.googleCallback(res.code);
+        });
+      },
+
+      getAuthCode(){
+        const authInstance = window.gapi.auth2.getAuthInstance();
+          authInstance.grantOfflineAccess()
+          .then((res) => {
+            this.googleCallback(res.code);
+          });
+      },
+
+      checkHasGoogleAuth(authUser){
+        const auth = gapi.auth2.getAuthInstance();
+        const currentUser = authUser?.getBasicProfile() || auth.currentUser.get().getBasicProfile();
+        let googleUser = {
+          name: currentUser.getName(),
+          email: currentUser.getEmail()
+        }
+        axios.post('api/users/google/status', googleUser)
+          .then(res => {
+            if(!res.data.error){
+              const payload = res.data.data;
+              if(!payload.hasGoogleAuth) this.getAuthCode();
+              else if(payload.hasGoogleAuth){
+                this.proceedWithLogin(payload.user);
+              }
+            }
+          })
+          .catch(e => console.log(e));
+      },*/
+
+      googleCallback(authCode){
+        axios.post('api/googlecallback', {code: authCode})
+          .then(res => {
+            if(!res.data.data.error){
+              if(res.data.data.hasGoogleAuth){
+                this.proceedWithLogin(res.data.data);          
+              }
+            }
+          })
+        .catch(err => console.log(err))
+      },
+
+      proceedWithLogin(userPayload){
+        this.$store.commit('UPDATE_USER', userPayload);
+        //go to inbox after google auth code is procured for the user
+        this.$router.push('/inbox');
+      },
+
+      /*renderGoogleButton(){
+        gapi.signin2.render('google-btn', {
+          'width': 240,
+          'height': 50,
+          'longtitle': true,
+          'theme': 'dark',
+          'onsuccess': this.onLoginSuccess,
+          'onfailure': this.onLoginError
+        });
+      },
+
+      googleLogoutHandler(){
+        const auth2Instance = gapi.auth2.getAuthInstance();
+        auth2Instance.signOut();
+      },
+
+      onLoginSuccess(googleUser){
+        const authResponse = googleUser.getAuthResponse();
+        const baseProfile = googleUser.getBasicProfile();
+        const googleProfile = {
+          name: baseProfile.getName(),
+          email: baseProfile.getEmail(),
+          avatar: baseProfile.getImageUrl()
+        }
+
+        const payload = {authResponse, googleProfile};
+        axios.post('api/users/store', payload)
+          .then(res => {
+            if(res.status == 200 && !res.data.error){
+              this.$store.commit('UPDATE_USER', res.data.data);
+              this.$router.push('/');
+            }
+          })
+          .catch(e => console.log(e));
+      },
+
+      attachSignInHandler(element){
+        const auth2Instance = gapi.auth2.getAuthInstance();
+        auth2Instance.attachClickHandler(element, {}, this.onLoginSuccess, this.onLoginError);
+      },
+
+      onLoginError(error){
+        console.log(error);
+      },*/
+
+      /*googleLoginHandler(){
+        const {scopes, clientId} = this.$store.state.googleCreds;
+        gapi.auth2.authorize({
+          client_id: clientId,
+          scope: scopes,
+          response_type: 'code'
+        }, (res) => {
+          console.log(res);
+        });
+      },
+
+      updateSigninStatus(isSignedIn){
+        if(isSignedIn){
+          const auth2 = gapi.auth2.getAuthInstance();
+          console.log(auth2);
+          const profile = auth2.currentUser.get().getBasicProfile();
+          console.log(profile);
+        }
+      },*/
     }
 }
 </script>
@@ -140,5 +319,38 @@ export default {
   .bd-placeholder-img-lg {
     font-size: 3.5rem;
   }
+}
+
+/**Google Sign In button styles */
+#customBtn {
+  display: inline-block;
+  background: white;
+  color: #444;
+  width: 190px;
+  border-radius: 5px;
+  border: thin solid #888;
+  box-shadow: 1px 1px 1px grey;
+  white-space: nowrap;
+}
+#customBtn:hover {
+  cursor: pointer;
+}
+span.label {
+  font-family: serif;
+  font-weight: normal;
+}
+span.icon {
+  background: url('../../assets/img/g-normal.png') transparent 5px 50% no-repeat;
+  display: inline-block;
+  vertical-align: middle;
+  width: 42px;
+  height: 42px;
+}
+span.buttonText {
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 42px;
+  font-size: 14px;
+  font-weight: bold;
 }
 </style>

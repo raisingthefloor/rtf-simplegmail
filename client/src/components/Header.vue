@@ -116,7 +116,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="#">Action</a></li>
                             <li><a class="dropdown-item" href="#">Another action</a></li>
-                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            <li @click="logoutHandler">
+                                <a class="dropdown-item" href="#">Logout</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -138,6 +140,17 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
             };
         },
 
-        methods: {}
+        methods: {
+            logoutHandler(){
+                this.$store.commit('LOGOUT_USER');
+                this.$router.push('/login');
+                //this.googleLogoutHandler();
+            },
+
+            /*googleLogoutHandler(){
+                const auth2Instance = gapi.auth2.getAuthInstance();
+                auth2Instance.signOut();
+            },*/
+        }
     }
 </script>
