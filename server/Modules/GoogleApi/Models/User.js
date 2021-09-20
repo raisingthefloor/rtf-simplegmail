@@ -57,7 +57,6 @@ const userSchema = new mongoose.Schema({
     },
     deletedAt:{
         type: Date,
-        default: Date.now
     },
 });
 

@@ -24,7 +24,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 -->
 
 <template>
-    <h2>Processing...</h2>
+    <div class="text-center mt-4">
+        <main class="form-signin">
+            <h1 class="h3 mb-3 fw-normal mt-2">Processing...</h1>
+        </main>
+    </div>
 </template>
 
 <script>
@@ -45,8 +49,7 @@ export default {
                 .then(response => {
                     if(!response.data.data.error){
                         if(response.data.data.hasGoogleAuth){
-                            const {hasGoogleAuth} = response.data.data;
-                            this.$store.commit('UPDATE_USER', {hasGoogleAuth});
+                            this.$store.commit('UPDATE_USER', response.data.data);
                             //go to inbox after google auth code is procured for the user
                             this.$router.push('/inbox');
                         }

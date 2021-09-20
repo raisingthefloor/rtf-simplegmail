@@ -50,7 +50,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="form-floating">
           <p style="color: red" v-show="showError">{{ $t('please_enter_correct_username_or_password') }}</p>
         </div> -->
-        <div class="form-floating">
+        <!-- <div class="form-floating">
           <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com" v-model="user.email" autofocus>
           <label for="floatingInput">Email Address</label>
         </div>
@@ -61,18 +61,17 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
         <button class="w-100 btn btn-lg btn-primary" type="submit">
           <span>Submit</span>
-          <!-- <span v-if="loginSubmitClicked">{{ $t('processing') }}</span> -->
+          <span v-if="loginSubmitClicked">{{ $t('processing') }}</span>
         </button>
-        <hr />
-        <!-- <div id="google-btn" class="g-signin2 btn" data-onsuccess="onSignIn"></div> -->
-        <div id="gSignInWrapper" class="mt-2">
+        <hr /> -->
+        <div @click="googleConnect" id="gSignInWrapper" class="mt-2">
           <div id="customBtn" class="customGPlusSignIn ">
             <span class="icon"></span>
-            <span class="buttonText">Sign in with Google</span>
+            <span class="buttonText">{{gBtnTxt}}</span>
           </div>
         </div>
         
-        <p class="mt-4">Not a user? <router-link to="/register">Register</router-link> </p>
+        <!-- <p class="mt-4">Not a user? <router-link to="/register">Register</router-link> </p> -->
 
       </form>
     </main>
@@ -88,16 +87,28 @@ export default {
           user:{
             email: null,
             password: null
-          }
+          },
+          gBtnTxt: 'Sign In With Google'
         }
     },
 
     mounted(){
-      this.loadGoogleClient();
+      //this.renderGoogleButton();
+      //this.loadGoogleClient();
     },
 
     methods:{
-      onSubmit(){
+      googleConnect(){
+        axios.get('api/connect')
+        .then(res => {
+          if(!res.data.error && res.data.url){
+            window.location.href = res.data.url;
+          }
+        })
+        .catch(err => console.log(err));
+      },
+
+      /*onSubmit(){
         //this.$router.push('/inbox');
         axios.post(`api/users/login`, this.user)
           .then(payload => {
@@ -107,28 +118,98 @@ export default {
             }
           })
           .catch(e => console.log(e));
+      },*/
+
+      /*loadGoogleClient(){
+        // Load the API client auth2 library
+        this.gBtnTxt = "Please wait...";
+        gapi.load('auth2', this.initGoogleClient);
       },
 
-      loadGoogleClient(){
-        // Load the API client auth2 library
-        gapi.load('auth2', this.initGoogleClient);
+      gSignIn(promptType){
+        gapi.auth2.getAuthInstance().signIn({prompt: promptType})
+        .then(googleUser => {
+          this.checkHasGoogleAuth(googleUser);   
+        })
+        .catch(e => console.log(e))
       },
 
       initGoogleClient(){
         const {clientId, discoveryDocs, scopes} = this.$store.state.googleCreds;
-        
         gapi.auth2.init({
-          clientId: clientId,
+          client_id: clientId,
           discoveryDocs: discoveryDocs,
-          scope: scopes
-        }).then(() => {
-            // Listen for sign-in state changes.
-            //gapi.auth2.getAuthInstance().isSignedIn.listen(this.updateSigninStatus);
-            //console.log(gapi.auth2.getAuthInstance());
-            // Handle the initial sign-in state.
-            //this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get())
+          scope: scopes,
+          //response_type: 'code'
+        }).then((res) => {
+          const authInstance = window.gapi.auth2.getAuthInstance();
+          authInstance.grantOfflineAccess()
+          .then((res) => {
+            this.googleCallback(res.code);
+          })
+          this.gSignIn();
+          //this.checkHasGoogleAuth();
+        })
+        //this.attachSignInHandler(document.getElementById('customBtn'));
+      },
+
+      gAuthorize(){
+        const {clientId, discoveryDocs, scopes} = this.$store.state.googleCreds;
+        gapi.auth2.authorize({
+          client_id: clientId,
+          //discoveryDocs: discoveryDocs,
+          scope: scopes,
+          redirect_uri: 'http://localhost:3000/googlecallback',
+          response_type: 'code'
+        }, (res) => {
+          this.googleCallback(res.code);
         });
-        this.attachSignInHandler(document.getElementById('customBtn'));
+      },
+
+      getAuthCode(){
+        const authInstance = window.gapi.auth2.getAuthInstance();
+          authInstance.grantOfflineAccess()
+          .then((res) => {
+            this.googleCallback(res.code);
+          });
+      },
+
+      checkHasGoogleAuth(authUser){
+        const auth = gapi.auth2.getAuthInstance();
+        const currentUser = authUser?.getBasicProfile() || auth.currentUser.get().getBasicProfile();
+        let googleUser = {
+          name: currentUser.getName(),
+          email: currentUser.getEmail()
+        }
+        axios.post('api/users/google/status', googleUser)
+          .then(res => {
+            if(!res.data.error){
+              const payload = res.data.data;
+              if(!payload.hasGoogleAuth) this.getAuthCode();
+              else if(payload.hasGoogleAuth){
+                this.proceedWithLogin(payload.user);
+              }
+            }
+          })
+          .catch(e => console.log(e));
+      },*/
+
+      googleCallback(authCode){
+        axios.post('api/googlecallback', {code: authCode})
+          .then(res => {
+            if(!res.data.data.error){
+              if(res.data.data.hasGoogleAuth){
+                this.proceedWithLogin(res.data.data);          
+              }
+            }
+          })
+        .catch(err => console.log(err))
+      },
+
+      proceedWithLogin(userPayload){
+        this.$store.commit('UPDATE_USER', userPayload);
+        //go to inbox after google auth code is procured for the user
+        this.$router.push('/inbox');
       },
 
       /*renderGoogleButton(){
@@ -145,7 +226,7 @@ export default {
       googleLogoutHandler(){
         const auth2Instance = gapi.auth2.getAuthInstance();
         auth2Instance.signOut();
-      },*/
+      },
 
       onLoginSuccess(googleUser){
         const authResponse = googleUser.getAuthResponse();
@@ -174,10 +255,17 @@ export default {
 
       onLoginError(error){
         console.log(error);
-      },
+      },*/
 
       /*googleLoginHandler(){
-        gapi.auth2.getAuthInstance().signIn();
+        const {scopes, clientId} = this.$store.state.googleCreds;
+        gapi.auth2.authorize({
+          client_id: clientId,
+          scope: scopes,
+          response_type: 'code'
+        }, (res) => {
+          console.log(res);
+        });
       },
 
       updateSigninStatus(isSignedIn){
@@ -252,7 +340,7 @@ span.label {
   font-weight: normal;
 }
 span.icon {
-  background: url('./assets/img/g-normal.png') transparent 5px 50% no-repeat;
+  background: url('../../assets/img/g-normal.png') transparent 5px 50% no-repeat;
   display: inline-block;
   vertical-align: middle;
   width: 42px;

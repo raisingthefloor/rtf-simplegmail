@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="google-signin-client_id" content="417728105098-urn8v0e481l1mthrs3i3ltn1jumpejsk.apps.googleusercontent.com">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title>SimpleGmail</title>
 
     <!-- Bootstrap CSS -->
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet" />
@@ -14,26 +16,29 @@
     <!--Quill Editor CSS-->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
-    <title>SimpleGMail</title>
     <!--Common Internal Styles-->
     <style>
-        .disabled-btn{
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        /*to remove scrollbar from body*/
-        .main__area {
-            padding-bottom:0;
-        }
-    </style>
+      .disabled-btn{
+          opacity: 0.5;
+          cursor: not-allowed;
+      }
+      /*to remove scrollbar from body*/
+      .main__area {
+          padding-bottom:0;
+      }
+  </style>
   </head>
   <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
     <div id="app"></div>
     <!-- <script src="https://apis.google.com/js/platform.js" async defer></script> -->
     <script src="./assets/js/google.platform.js"></script>
     <script src="./assets/js/jquery.min.js"></script>
     <script src="./assets/js/popper.js"></script>
     <script src="./assets/js/bootstrap.min.js"></script>
-    <script type="module" src="./src/main.js"></script>
+    
+    <!-- built files will be auto injected -->
   </body>
 </html>

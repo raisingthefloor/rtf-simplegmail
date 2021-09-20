@@ -36,7 +36,6 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 </template>
 
 <script>
-import Inbox from "./Inbox.vue";
 export default {
     data(){
         return{
