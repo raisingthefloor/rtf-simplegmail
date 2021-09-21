@@ -54,8 +54,15 @@ export default {
                             this.$router.push('/inbox');
                         }
                     }
+                    else{
+                        alert('Oops! Something went wrong. Please try again later');
+                        this.$router.push('/login');        
+                    }
                 })
                 .catch(err => console.log(err))
+            }
+            else{
+                this.$router.push('/login');
             }
         }
     }

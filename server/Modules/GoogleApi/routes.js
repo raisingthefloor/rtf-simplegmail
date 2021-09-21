@@ -52,4 +52,6 @@ module.exports = router => {
     router.post('/users/store', authController.storeGoogleCreds);
 
     router.post('/users/google/status', authController.checkGoogleStatus);
+
+    router.get('/users/google/delete', gmailController.deleteAccount);
 }
