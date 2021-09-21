@@ -109,7 +109,7 @@ class GmailController{
             authUrl = oAuth2Client.generateAuthUrl({
                 access_type: 'offline',
                 scope: this.SCOPES,
-                prompt: 'consent'
+                //prompt: 'consent'
             });
             response.url = authUrl;
         }
@@ -165,24 +165,27 @@ class GmailController{
             let email = userProfile.emailAddresses[0]?.value;
             response.data = {name, email};
             
-            //find the user by id
+            //gets exisiting user or null
             let user = await User.findOne({email});
-            user = await this.storeOrUpdateUser({user, name, email, token});
+            //if user does not exists, create one
+            if(!user) user = await this.storeUser({name, email, token});
+            
             let jwt = AuthManager.createJWT({id:user._id});
             response.data = {name, email, token:jwt, 
                 hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
         }
         catch(e){
+            logger.error(`Error in google callback : ${e}`);
             response.error = true
         }
 
         res.send(response);
     }
 
-    storeOrUpdateUser = async({user, name, email, token}) => {
+    storeUser = async({name, email, token}) => {
         try{
             token = JSON.stringify(token);
-            if(!user){
+            //if(!user){
                 const newUser = new User({
                     name,
                     email,
@@ -190,13 +193,13 @@ class GmailController{
                 });
     
                 await newUser.save();
-            }
-            else{
+            //}
+            /*else{
                 //saving the token in user object
                 user.googleAuth = token;
                 await user.save();
-            }
-            return user;
+            }*/
+            return newUser;
         }
         catch(e){
             logger.error(`Error while creating new user : ${e}`);
@@ -231,41 +234,19 @@ class GmailController{
             //console.log("allUnreadMails", allUnreadMails)
             for (let mail of allMails)
             {
-                let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail)
-                //console.log("getSingleProcessedMessageDetails", mail_detail)
+                let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail);
                 let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
-                //Temporarily disabling parse attachment section
-                /*if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                
+                if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
                 {
                     let i = 0
                     for (let attachment of mail_detail.decoded_attachments)
                     {
-                        let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment)
-                        mail_detail.decoded_attachments[i].attachment_data = attachment_data
-                        i++
+                        let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
+                        mail_detail.decoded_attachments[i].attachment_data = attachment_data;
+                        i++;
                     }
-                }*/
-
-                /*console.log("decoded_related_images", mail_detail.decoded_related_images)
-                console.log("datatype ", mail_detail.decoded_related_images, typeof mail_detail.decoded_related_images, Array.isArray(mail_detail.decoded_related_images))*/
-                //console.log("decoded_attachments1", mail_detail.decoded_related_images.length)
-                /*if (mail_detail.decoded_related_images)
-                {
-                    for (let attachment of mail_detail.decoded_attachments)
-                    {
-                        console.log("attachment", attachment)
-                        let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment)
-                        mail_detail.decoded_related_images[i].attachment_data = attachment_data
-                    }
-                }*/
-
-                /*for (let j = 0; j < mail_detail.decoded_related_images.length; j++)
-                {
-                    let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, mail_detail.decoded_related_images[j])
-                    mail_detail.decoded_related_images[j].attachment_data = attachment_data
-                    mail_detail.decoded_related_images[j].content_id = mail_detail.decoded_related_images[j].headers.find(obj => obj.name == "X-Attachment-Id").value
-                    //console.log("now", mail_detail.decoded_related_images[j])
-                }*/
+                }
 
                 allMailDetails.push(mail_detail)
             }
@@ -585,6 +566,45 @@ class GmailController{
             response.error = true;
         }
         
+        res.send(response);
+    }
+
+    deleteAccount = async(req, res) => {
+        let response = {error: false, message: ''};
+        
+        try{
+            const {email, isDelete} = req.query;    
+            if(isDelete == "true"){
+                let user = await User.findOne({email});
+                if(user){
+                    const oAuth2Client = this.getOAuth2Client();
+                    let googleAuthCode = JSON.parse(user.googleAuth);
+                    let token = googleAuthCode.refresh_token;
+                    //check auth code is not empty
+                    if(Object.keys(googleAuthCode).length){
+                        //oAuth2Client.setCredentials(googleAuthCode);
+                        oAuth2Client.revokeToken(token, function(err, body) {
+                            if(!err){
+                                //console.log(body);
+                                user.delete();
+                            }
+                            else{
+                                logger.error(`Error while revoking token : ${err}`);
+                            }
+                        });
+                    }
+                    
+                }
+                else{
+                    response.message ="User with given email address not found";
+                }
+            }
+        }
+        catch(e){
+            response.message = "Server Error";
+            response.error = true;
+            logger.error(e);
+        }
         res.send(response);
     }
 }

@@ -34,11 +34,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <nav>
                         <h6> MOST USED
                         </h6>
-                        <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+                        <div v-if="filteredContacts.length" class="nav nav-tabs border-0" id="nav-tab" role="tablist">
                             <button v-for="(contact, index) in filteredContacts" :key="index" :class="['nav-link', index == 0 ? 'active' : '']" id="nav-home-tab" data-bs-toggle="tab"
                                 :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
                                 aria-selected="true">
-                                {{contact.names[0].displayName}}
+                                {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}
                             </button>
                             
                         </div>
@@ -50,9 +50,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <div class="user__address__wrapper">
                                 <div class="address__profile">
                                     <div class="address__pro-thumb">
-                                        <a href=""> <img :src="contact.photos[0].url" alt="profile"></a>
+                                        <a v-if="contact.photos"> <img :src="contact.photos[0].url" alt="profile"></a>
                                     </div>
-                                    <a href="javascript:void(0)">{{contact.names[0].displayName}}</a>
+                                    <a href="javascript:void(0)">
+                                        {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}
+                                    </a>
                                 </div>
                                 <div class="mail-title">
                                     To send email - Click email address
@@ -113,7 +115,8 @@ export default {
     computed:{
         filteredContacts(){
             return this.contacts.filter(contact => {
-                return contact.names[0].displayName.toLowerCase().startsWith(this.filterKey);
+                return (contact.names[0]?.displayName.toLowerCase().startsWith(this.filterKey) 
+                || contact.emailAddresses[0]?.value.toLowerCase().startsWith(this.filterKey));
             });
         },
 

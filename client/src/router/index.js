@@ -57,6 +57,11 @@ const routes = [
         path: "/register",
         name: "Register",
         component: () => import('../components/authentication/Register.vue')
+    },
+    {
+        path: "/account-delete",
+        name: "DeleteAccount",
+        component: () => import('../components/authentication/DeleteAccount.vue')
     }
 ];
 

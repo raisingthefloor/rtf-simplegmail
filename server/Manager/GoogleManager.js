@@ -355,6 +355,7 @@ exports.sendMail = async(raw, auth) => {
         });
     });
 }
+
 //saves a raw message as draft
 exports.saveAsDraft = async (raw, auth) => {
     return new Promise((resolve, reject) => {
@@ -436,6 +437,7 @@ exports.modifyLabels = async (params, auth) => {
     });
 }
 
+//Get Labels from Gmail Server
 exports.getLabels = async auth => {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth});
@@ -453,6 +455,7 @@ exports.getLabels = async auth => {
     });
 }
 
+//Creates a new user defined label on Gmail Server
 exports.addLabels = async (labelOptions, auth) => {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth});
@@ -470,4 +473,20 @@ exports.addLabels = async (labelOptions, auth) => {
             }
         });  
     });
+}
+
+//fetches attachment from Gmail Server
+exports.attachmentData = async function (auth, messageId, attachment) {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({version: 'v1', auth})
+        gmail.users.messages.attachments.get({
+            userId: 'me',
+            messageId: messageId,
+            id: attachment.body.attachmentId
+        }, (err, res) => {
+            if(!err) resolve(res.data);
+            else return logger.error(`Error while fetching attachment : ${err}`);
+            
+        })
+    })
 }
