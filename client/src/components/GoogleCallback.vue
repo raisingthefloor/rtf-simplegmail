@@ -33,6 +33,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <script>
 import axios from 'axios';
+import * as Sentry from "@sentry/vue";
 export default {
     name: 'GoogleCallback',
 
@@ -59,7 +60,9 @@ export default {
                         this.$router.push('/login');        
                     }
                 })
-                .catch(err => console.log(err))
+                .catch(err => {
+                    Sentry.captureException(err);
+                })
             }
             else{
                 this.$router.push('/login');

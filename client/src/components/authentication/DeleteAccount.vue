@@ -55,7 +55,8 @@ export default {
             if(this.email){
                 axios.get(`api/users/google/delete?email=${this.email}&isDelete=true`)
                     .then(res => {
-                        console.log(res);
+                      alert(res.data.message);
+                      this.email = '';
                     })
                     .catch(e => console.log(e));
             }

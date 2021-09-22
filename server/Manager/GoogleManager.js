@@ -485,8 +485,24 @@ exports.attachmentData = async function (auth, messageId, attachment) {
             id: attachment.body.attachmentId
         }, (err, res) => {
             if(!err) resolve(res.data);
-            else return logger.error(`Error while fetching attachment : ${err}`);
-            
+            else return logger.error(`Error while fetching attachment : ${err}`);            
         })
     })
+}
+
+exports.revokeToken = async({oAuth2Client, user}) => {
+    let token = oAuth2Client.credentials.refresh_token;
+    return new Promise((resolve, reject) => {
+        oAuth2Client.revokeToken(token, function(err, body) {
+            if(!err){
+                //console.log(body);
+                user.delete();
+                resolve('Email Removed Successfully');
+            }
+            else{
+                logger.error(`Error while revoking token : ${err}`);
+                reject('Error while revoking token');
+            }
+        });
+    });
 }

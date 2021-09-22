@@ -141,6 +141,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import * as Sentry from "@sentry/vue";
 export default {
     data(){
         return{
@@ -159,7 +160,9 @@ export default {
                 .then(payload => {
                     this.messages = payload.data.data;
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         }
     }
 }

@@ -38,10 +38,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             :aria-selected="index == 0 ? 'true' : 'false'">
                             <div class="nav__btn__content">
                                 <div class="nav__btn__top">
-                                    <p>From: {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}</p>
+                                    <p>From: {{$filters.strip_html(message.payload.headers.find(header => header.name.toLowerCase() == "from").value)}}</p>
                                     <p class="date">{{moment(+message.internalDate).format('DD/MM/YY')}}</p>
                                 </div>
-                                <!-- <p>RE: Coming home for Easter <span class="new__message">NEW</span></p> -->
+                                <p>RE: Coming home for Easter ... <span class="new__message">NEW</span></p>
                             </div>
                         </button>
                     </div>
@@ -137,6 +137,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 </template>
 
 <script>
+import * as Sentry from "@sentry/vue";
 import moment from 'moment';
 import axios from 'axios';
 /*import { mapState } from 'vuex';
@@ -157,6 +158,12 @@ export default {
         //this.getThreads();
         //this.getThreadMessages();
     },
+
+    /*computed:{
+        truncatedSubject(subject){
+            const maxLength = 22;
+        }
+    },*/
 
     /*mounted(){
         if(this.googleCreds.isSignedIn){
@@ -184,19 +191,9 @@ export default {
                         this.messages = payload.data.data;
                     }
                 })
-                .catch(err => console.log(err));
-            /*gapi.client.gmail.users.messages.list({
-                userId: 'me',
-                labelIds: ['INBOX'],
-                maxResults: 20,
-                includeSpamTrash: false
-            })
-            .then(res => {
-                this.messageIds = res.result.messages;
-                for(const message of this.messageIds){
-                    this.getSingleProcessedMessage(message.id);
-                }
-            });*/
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         moveToTrash(messageId){
@@ -204,7 +201,9 @@ export default {
                 .then(payload => {
                     this.messages = this.messages.filter(msg => msg.id != payload.data.data.id)
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         replyClicked(message){
@@ -221,15 +220,18 @@ export default {
         getThreads(){
             axios.get('api/users/me/threads')
                 .then(response => console.log(response))
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         getThreadMessages(){
             axios.get('api/users/me/thread/17b9c7f7efe196b6/messages')
                 .then(payload => console.log(payload))
-                .catch(err => console.log(err))
+                .catch(err => {
+                    Sentry.captureException(err);
+                })
         },
-
         /*getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({
                 userId: 'me',
