@@ -189,6 +189,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 import moment from 'moment';
 import axios from 'axios';
 import Quill from 'quill';
+import * as Sentry from "@sentry/vue";
 
 export default {
     name: 'MailComposer',
@@ -274,14 +275,16 @@ export default {
                         attachments: []
                         //date: Date.now()
                     }
-
+                    //clearing the contents of Quill Editor
                     let element = document.getElementsByClassName("ql-editor");
                     element[0].innerHTML = "";
                 }
 
                 
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                Sentry.captureException(err);
+            });
         },
 
         prepareMailObject(){
@@ -303,7 +306,9 @@ export default {
             .then(payload => {
                 this.otherContacts = payload.data.data;
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                Sentry.captureException(err);
+            });
         },
 
         contactSearch(e){
@@ -384,15 +389,21 @@ export default {
 
         parseMailObject(){
             let formObject = new FormData();
-            for(let key in this.mail){
-                formObject.append(key, this.mail[key]);
-                if(key === "attachments"){
-                    for(let i=0; i<this.mail[key].length; ++i){
-                        formObject.append(`attachments[${i}]`, this.mail[key][i]);
+            try{
+                for(let key in this.mail){
+                    formObject.append(key, this.mail[key]);
+                    if(key === "attachments"){
+                        for(let i=0; i<this.mail[key].length; ++i){
+                            formObject.append(`attachments[${i}]`, this.mail[key][i]);
+                        }
                     }
                 }
+                return formObject;
             }
-            return formObject;
+            catch(err){
+                Sentry.captureException(err);
+            }
+            
         }
     }
 }

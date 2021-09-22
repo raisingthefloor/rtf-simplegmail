@@ -99,6 +99,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <script>
 import axios from 'axios';
+import * as Sentry from "@sentry/vue";
 export default {
     name: 'AddressBook',
     data(){
@@ -150,7 +151,9 @@ export default {
                         this.contacts = response.data.data;
                     }
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         }
     }
 }
