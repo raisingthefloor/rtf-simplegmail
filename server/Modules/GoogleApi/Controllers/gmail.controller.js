@@ -32,6 +32,7 @@ const fs = require('fs/promises');
 const formidable = require('formidable');
 const MailComposer = require("nodemailer/lib/mail-composer");
 const User = require("../Models/User");
+const Sentry = require("@sentry/node");
 
 
 //Controller definition
@@ -48,7 +49,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         let redirectUrlIndex = redirect_uris.findIndex(uri => this.redirectUrl === uri);
-        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[4]);
     }
 
     //methods to handle requests
@@ -109,11 +110,13 @@ class GmailController{
             authUrl = oAuth2Client.generateAuthUrl({
                 access_type: 'offline',
                 scope: this.SCOPES,
-                prompt: 'consent'
+                //prompt: 'consent'
             });
             response.url = authUrl;
         }
-        catch(e){
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
             response.error = true;
         }
 
@@ -165,24 +168,28 @@ class GmailController{
             let email = userProfile.emailAddresses[0]?.value;
             response.data = {name, email};
             
-            //find the user by id
+            //gets exisiting user or null
             let user = await User.findOne({email});
-            user = await this.storeOrUpdateUser({user, name, email, token});
+            //if user does not exists, create one
+            if(!user) user = await this.storeUser({name, email, token});
+            
             let jwt = AuthManager.createJWT({id:user._id});
             response.data = {name, email, token:jwt, 
                 hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
         }
-        catch(e){
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(`Error in google callback : ${exp}`);
             response.error = true
         }
 
         res.send(response);
     }
 
-    storeOrUpdateUser = async({user, name, email, token}) => {
+    storeUser = async({name, email, token}) => {
         try{
             token = JSON.stringify(token);
-            if(!user){
+            //if(!user){
                 const newUser = new User({
                     name,
                     email,
@@ -190,185 +197,95 @@ class GmailController{
                 });
     
                 await newUser.save();
-            }
-            else{
+            //}
+            /*else{
                 //saving the token in user object
                 user.googleAuth = token;
                 await user.save();
-            }
-            return user;
+            }*/
+            return newUser;
         }
-        catch(e){
-            logger.error(`Error while creating new user : ${e}`);
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(`Error while creating new user : ${exp}`);
         }
     }
 
     getMails = async (req, res) => {
-        let response = {error: false, data: []};
-
+        let response = {error: false, data: [], nextPageToken: null};
         let labelIds = [req.params.type.toUpperCase()];
-        let credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
-        const {client_secret, client_id, redirect_uris} = credentials.web
-        const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+        let  {nextPage} = req.query;
+        nextPage = nextPage === "null" ? '' : nextPage;
+
+        //get OAuth2Client Client
+        const oAuth2Client = this.getOAuth2Client();
+
         let allMailDetails = [];
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
+        try{
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                //get google authentication token from user
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+
+                    //get a specified number of mail containing threadId and messageId
+                    let responseObj = await GoogleManager.getMessages(oAuth2Client, labelIds, nextPage);
+                    let {messages, nextPageToken} = responseObj;
+                    let allMails = messages;
+                    response.nextPageToken = nextPageToken;
+                    if(req.params.id){
+                        //fetch message metadata for allMails
+                        for(let mail of allMails){
+                            let mail_meta = await GoogleManager.getSingleMessageMetadata(oAuth2Client, mail.id);
+                            allMailDetails.push(mail_meta);
+                        }
+                    }
+                    else{
+                        for (let mail of allMails)
+                        {
+                            let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail);
+                            let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
+                            
+                            if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                            {
+                                let i = 0
+                                for (let attachment of mail_detail.decoded_attachments)
+                                {
+                                    let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
+                                    mail_detail.decoded_attachments[i].attachment_data = attachment_data;
+                                    i++;
+                                }
+                            }
+
+                            allMailDetails.push(mail_detail)
+                        }
+                    }
+                                        
+                    response.data = allMailDetails;
+                }
+            }
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
             response.error = true;
         }
 
-        //get google authentication token from user
-        let googleAuthCode = JSON.parse(user.googleAuth);
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-            oAuth2Client.currentClassPointer = this;
-
-            const gmail = google.gmail({version: 'v1', oAuth2Client});
-            
-            let allMails = await GoogleManager.getMessages(oAuth2Client, labelIds);
-            
-            //console.log("allUnreadMails", allUnreadMails)
-            for (let mail of allMails)
-            {
-                let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail)
-                //console.log("getSingleProcessedMessageDetails", mail_detail)
-                let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
-                //Temporarily disabling parse attachment section
-                /*if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
-                {
-                    let i = 0
-                    for (let attachment of mail_detail.decoded_attachments)
-                    {
-                        let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment)
-                        mail_detail.decoded_attachments[i].attachment_data = attachment_data
-                        i++
-                    }
-                }*/
-
-                /*console.log("decoded_related_images", mail_detail.decoded_related_images)
-                console.log("datatype ", mail_detail.decoded_related_images, typeof mail_detail.decoded_related_images, Array.isArray(mail_detail.decoded_related_images))*/
-                //console.log("decoded_attachments1", mail_detail.decoded_related_images.length)
-                /*if (mail_detail.decoded_related_images)
-                {
-                    for (let attachment of mail_detail.decoded_attachments)
-                    {
-                        console.log("attachment", attachment)
-                        let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment)
-                        mail_detail.decoded_related_images[i].attachment_data = attachment_data
-                    }
-                }*/
-
-                /*for (let j = 0; j < mail_detail.decoded_related_images.length; j++)
-                {
-                    let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, mail_detail.decoded_related_images[j])
-                    mail_detail.decoded_related_images[j].attachment_data = attachment_data
-                    mail_detail.decoded_related_images[j].content_id = mail_detail.decoded_related_images[j].headers.find(obj => obj.name == "X-Attachment-Id").value
-                    //console.log("now", mail_detail.decoded_related_images[j])
-                }*/
-
-                allMailDetails.push(mail_detail)
-            }
-            response.data = allMailDetails;
-        }
-
-    res.send(response);
+        res.send(response);
     }
 
     getAllContacts = async (req, res) => {
         let response = {error: false, data: []};
-
-        const oAuth2Client = this.getOAuth2Client();
-        //an array to hold a list of authenticated user contacts
-        let contacts = [];
-
-        //get google authentication token from auth user
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
-            response.error = true;
-        }
-        let googleAuthCode = JSON.parse(user.googleAuth);
-
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-
-            contacts = await GoogleManager.listAllConnections(oAuth2Client);
-        }
-        response.data = contacts;
-        res.send(response);
-    }
-
-    trashMessage = async (req, res) => {
-        let response = {error: false, data: []};
-
-        //the message object representing the message that is to be trashed
-        let message = {userId : req.params.uid, id: req.params.mid};
-
-        const oAuth2Client = this.getOAuth2Client();
-        
-        //The message which is trashed
-        let trashedMessage = {};
-        
-        //get google authentication token from auth user
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
-            response.error = true;
-        }
-        let googleAuthCode = JSON.parse(user.googleAuth);
-
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-
-            trashedMessage = await GoogleManager.trashMessage(message, oAuth2Client);
-        }
-        response.data = trashedMessage;
-        res.send(response);
-    }
-
-    deleteFromTrash = async(req, res) => {
-        let response = {error: false, data: []};
-
-        //the message object representing the message that is to be removed from trash
-        let message = {userId : req.params.uid, id: req.params.mid};
-
-        const oAuth2Client = this.getOAuth2Client();
-        
-        //The message which is removed from trash
-        let deletedMessage = {};
-        
-        //get google authentication token from auth user
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
-            response.error = true;
-        }
-        let googleAuthCode = JSON.parse(user.googleAuth);
-
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-
-            deletedMessage = await GoogleManager.deleteFromTrash(message, oAuth2Client);
-        }
-        response.data = deletedMessage;
-        res.send(response);
-    }
-
-    sendMail = async (req, res) => {
-        let response = {error: false, data: []};
-
-        let encodedRawMail = "";
-        const form = new formidable.IncomingForm();
-        form.parse(req, async(err, fields, files) => {
-            //creating attachments suitable for transfering via GMail API
-            const attachments = this.parseAttachments(files);
-            encodedRawMail = await this.formatMail(fields, attachments);
-
+        try{
             const oAuth2Client = this.getOAuth2Client();
-            
-            //The message which is sent
-            let sentMessage = {};
+            //an array to hold a list of authenticated user contacts
+            let contacts = [];
 
             //get google authentication token from auth user
             let user = await User.findOne({_id: req.user.id});
@@ -381,18 +298,140 @@ class GmailController{
             if(Object.keys(googleAuthCode).length){
                 oAuth2Client.setCredentials(googleAuthCode);
 
-                if(!fields.saveAsDraft){
-                    sentMessage = await GoogleManager.sendMail(encodedRawMail, oAuth2Client);
+                contacts = await GoogleManager.listAllConnections(oAuth2Client);
+            }
+            response.data = contacts;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
+            response.error = true;
+        }
+        
+        res.send(response);
+    }
+
+    trashMessage = async (req, res) => {
+        let response = {error: false, data: []};
+
+        //the message object representing the message that is to be trashed
+        let message = {userId : req.params.uid, id: req.params.mid};
+
+        try{
+            const oAuth2Client = this.getOAuth2Client();
+        
+            //The message which is trashed
+            let trashedMessage = {};
+            
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            let googleAuthCode = JSON.parse(user.googleAuth);
+
+            //check auth code is not empty
+            if(Object.keys(googleAuthCode).length){
+                oAuth2Client.setCredentials(googleAuthCode);
+
+                trashedMessage = await GoogleManager.trashMessage(message, oAuth2Client);
+            }
+            response.data = trashedMessage;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
+            response.error = true;
+        }
+        
+        res.send(response);
+    }
+
+    deleteFromTrash = async(req, res) => {
+        let response = {error: false, data: []};
+
+        //the message object representing the message that is to be removed from trash
+        let message = {userId : req.params.uid, id: req.params.mid};
+
+        try{
+            const oAuth2Client = this.getOAuth2Client();
+        
+            //The message which is removed from trash
+            let deletedMessage = {};
+            
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            let googleAuthCode = JSON.parse(user.googleAuth);
+
+            //check auth code is not empty
+            if(Object.keys(googleAuthCode).length){
+                oAuth2Client.setCredentials(googleAuthCode);
+
+                deletedMessage = await GoogleManager.deleteFromTrash(message, oAuth2Client);
+            }
+            response.data = deletedMessage;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
+            response.error = true;
+        }
+        res.send(response);
+    }
+
+    sendMail = async (req, res) => {
+        let response = {error: false, data: []};
+
+        let encodedRawMail = "";
+        try{    
+            const form = new formidable.IncomingForm();
+            form.parse(req, async(err, fields, files) => {
+                if(err){
+                    response.error = true;
                 }
                 else{
-                    sentMessage = await GoogleManager.saveAsDraft(encodedRawMail, oAuth2Client);
-                }
+                    //creating attachments suitable for transfering via GMail API
+                    const attachments = this.parseAttachments(files);
+                    encodedRawMail = await this.formatMail(fields, attachments);
 
-            }
-            response.data = sentMessage;
-            res.send(response);
-        });
-        
+                    const oAuth2Client = this.getOAuth2Client();
+                    
+                    //The message which is sent
+                    let sentMessage = {};
+
+                    //get google authentication token from auth user
+                    let user = await User.findOne({_id: req.user.id});
+                    if(!user){
+                        response.error = true;
+                    }
+                    let googleAuthCode = JSON.parse(user.googleAuth);
+
+                    //check auth code is not empty
+                    if(Object.keys(googleAuthCode).length){
+                        oAuth2Client.setCredentials(googleAuthCode);
+
+                        if(!fields.saveAsDraft){
+                            sentMessage = await GoogleManager.sendMail(encodedRawMail, oAuth2Client);
+                        }
+                        else{
+                            sentMessage = await GoogleManager.saveAsDraft(encodedRawMail, oAuth2Client);
+                        }
+
+                    }
+                    response.data = sentMessage;
+                }
+                return res.send(response);
+            });
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
+            response.error = true;
+        }
+                
     }
 
     parseAttachments(files){
@@ -440,27 +479,34 @@ class GmailController{
 
     getOtherContacts = async (req, res) => {
         let response = {error: false, data: []};
-
-        const oAuth2Client = this.getOAuth2Client();
-        
+        //A List of other contacts i.e contacts which are not in user's connections
         let otherContacts = [];
 
-        //get google authentication token from auth user
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
+        try{
+            //get oauth2client
+            const oAuth2Client = this.getOAuth2Client();
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            let googleAuthCode = JSON.parse(user.googleAuth);
+
+            //check auth code is not empty
+            if(Object.keys(googleAuthCode).length){
+                oAuth2Client.setCredentials(googleAuthCode);
+
+                otherContacts = await GoogleManager.getOtherContacts(oAuth2Client);
+            }
+            response.data = otherContacts;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
             response.error = true;
         }
-        let googleAuthCode = JSON.parse(user.googleAuth);
-
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-
-            otherContacts = await GoogleManager.getOtherContacts(oAuth2Client);
-        }
-        response.data = otherContacts;
+        
         res.send(response);
-
     }
 
     getThreads = async (req, res) => {
@@ -477,7 +523,6 @@ class GmailController{
             threads = await GoogleManager.getThreadsList(oAuth2Client);
         }
         res.send(threads);
-
     }
 
     getThreadMessages = async(req, res) => {
@@ -497,32 +542,40 @@ class GmailController{
     }
 
     restoreMessage = async(req, res) => {
+        let response = {error: false, data: {}};
         let params = {
             id: req.params.mid,
             addLabelIds: req.body.addLabelIds,
             removeLabelIds: req.body.removeLabelIds
         };
 
-        const oAuth2Client = this.getOAuth2Client();
+        try{
+            const oAuth2Client = this.getOAuth2Client();
 
-        //The message whose label is modified
-        let msg = {};
+            //The message whose label is modified
+            let msg = {};
 
-        //get google authentication token from auth user
-        let user = await User.findOne({_id: req.user.id});
-        if(!user){
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            let googleAuthCode = JSON.parse(user.googleAuth);
+
+            //check auth code is not empty
+            if(Object.keys(googleAuthCode).length){
+                oAuth2Client.setCredentials(googleAuthCode);
+
+                msg = await GoogleManager.modifyLabels(params, oAuth2Client);
+            }
+            response.data = msg;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(exp);
             response.error = true;
         }
-        let googleAuthCode = JSON.parse(user.googleAuth);
-
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
-
-            msg = await GoogleManager.modifyLabels(params, oAuth2Client);
-        }
         res.send(msg);
-
     }
 
     getLabels = async (req, res) => {
@@ -550,6 +603,7 @@ class GmailController{
             response.data = labels;
         }
         catch(e){
+            Sentry.captureException(e);
             logger.error(`Error while fetching labels : ${e}`);
             response.error = true;
         }
@@ -582,9 +636,90 @@ class GmailController{
             response.data = label;
         }
         catch(e){
+            Sentry.captureException(e);
+            logger.error(`Error while creating a new user label : ${e}`);
             response.error = true;
         }
         
+        res.send(response);
+    }
+
+    getMessageDetails = async (req, res) =>{
+        let response = {error: false, data: null};
+        let messageId = req.params.mid;
+        //an object that will contact a single message details
+        try{
+            //get Oauth2client instance
+            const oAuth2Client = this.getOAuth2Client();
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                //get google authentication token from user
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    //getting the whole message with headers and body
+                    let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, messageId);
+                    //let message_Id = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
+                    //fetch attachments if message has any    
+                    if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                    {
+                        let i = 0
+                        for (let attachment of mail_detail.decoded_attachments)
+                        {
+                            let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
+                            mail_detail.decoded_attachments[i].attachment_data = attachment_data;
+                            i++;
+                        }
+                    }
+
+                    response.data = mail_detail;
+                }
+            }
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(`Error while fetching message details : ${exp}`);
+            response.error = true;
+        }
+
+        res.send(response);
+    }
+
+    deleteAccount = async(req, res) => {
+        let response = {error: false, message: ''};
+        
+        try{
+            const {email, isDelete} = req.query;    
+            if(isDelete == "true"){
+                let user = await User.findOne({email});
+                if(user){
+                    const oAuth2Client = this.getOAuth2Client();
+                    let googleAuthCode = JSON.parse(user.googleAuth);
+
+                    //check auth code is not empty
+                    if(Object.keys(googleAuthCode).length){
+                        oAuth2Client.setCredentials(googleAuthCode);
+                        //revokes the google token and deletes user from database
+                        response.message = await GoogleManager.revokeToken({oAuth2Client, user});
+                    }
+                    
+                }
+                else{
+                    response.message ="User with given email address not found";
+                }
+            }
+        }
+        catch(e){
+            Sentry.captureException(e);
+            response.message = "Server Error";
+            response.error = true;
+            logger.error(e);
+        }
         res.send(response);
     }
 }

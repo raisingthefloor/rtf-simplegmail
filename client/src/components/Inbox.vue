@@ -25,51 +25,58 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <template>
     <div>
-        <div class="common__area ">
-            <div class="common__tab__area diff">
+        <div class="common__area d-flex justify-content-between">
+            <div class="common__tab__area diff" v-if="messages.length">
                 <nav>
                     <div class="nav__title">
                         <h5>email in <b>INBOX</b></h5>
                     </div>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <button v-for="(message, index) in messages" :key="index"
-                            :class="['nav-link', index == 0 ? 'active' : '']" id="nav-home-tab" data-bs-toggle="tab"
+                        <button v-for="(message, index) in messages" :key="index" @click="getMessageDetails(message.id)"
+                            :class="['nav-link']" id="nav-home-tab" data-bs-toggle="tab"
                             :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
                             :aria-selected="index == 0 ? 'true' : 'false'">
                             <div class="nav__btn__content">
                                 <div class="nav__btn__top">
-                                    <p>From: {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}</p>
-                                    <p class="date">{{moment(+message.internalDate).format('DD/MM/YY')}}</p>
+                                    <p>From: {{$filters.strip_html(message.payload.headers.find(header => header.name.toLowerCase() == "from").value)}}</p>
+                                    <p class="date">{{moment(message.payload.headers.find(header => header.name.toLowerCase() == "date").value).format('DD/MM/YY')}}</p>
                                 </div>
-                                <!-- <p>RE: Coming home for Easter <span class="new__message">NEW</span></p> -->
+                                <div class="nav__btn__top">
+                                    <p>RE: {{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject").value)}} </p>
+                                    <p><span class="new__message">NEW</span></p>
+                                </div>
+                                
                             </div>
                         </button>
+                        <div v-if="nextPageToken" style="padding: 4px 8px;text-align: right;width: 100%;">
+                            <a @click="getInboxMessages" href="javascript:void(0)">More</a>
+                        </div>
                     </div>
                 </nav>
-                <div class="tab-content" id="nav-tabContent">
-                    <div v-for="(message, index) in messages" :key="index" :class="['tab-pane', 'fade', index == 0 ? 'active show' : '']" :id="'nav-home-'+index" role="tabpanel"
+                <div class="tab-content" id="nav-tabContent" v-if="messageDetails && !loading">
+                    <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
                         aria-labelledby="nav-home-tab">
                         <div class="common__mail__wrapper">
                             <div class="mail__details__blk position-relative">
                                 <div class="mail__details__left">
-                                    <p><b> TO:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "to")?.value ?? ''}}</p>
+                                    <p><b> TO:</b> {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "to")?.value ?? ''}}</p>
                                     <p><b>From: </b>
-                                        {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
+                                        {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
                                     </p>
                                     <p><b> Copy also sent to:</b> </p>
-                                    <p><b>Subject:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "subject").value}}</p>
+                                    <p><b>Subject:</b> {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "subject").value}}</p>
                                 </div>
                                 <div class="mail__details__right">
                                     <div class="mail__time">
-                                        <p>{{moment(+message.internalDate).format('DD/MM/YY hh:ss a')}}</p>
+                                        <p>{{moment(+messageDetails.internalDate).format('DD/MM/YY hh:ss a')}}</p>
                                     </div>
                                 </div>
-                                <div @click="moveToTrash(message.id)" title="Move to Trash" class="mail__close">
+                                <div @click="moveToTrash(messageDetails.id)" title="Move to Trash" class="mail__close">
                                     <i class="far fa-times"></i>
                                 </div>
                             </div>
                             <div class="common__mail__body mail--content">
-                                <div v-html="message.decoded_parts ? message.decoded_parts[0] : message.snippet"></div>
+                                <div class="msg-body" v-html="messageDetails.decoded_parts ? messageDetails.decoded_parts[0] : messageDetails.snippet"></div>
                             </div>
                             <div class="common__mail__bottom d-flex">
                                 <div class="dropdown mail__more__option ">
@@ -111,14 +118,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     </ul>
                                 </div> 
                                 <div class="mail__bottom__btns">
-                                    <button @click="replyClicked(message)" type="button" class="common__btn">
+                                    <button @click="replyClicked(messageDetails)" type="button" class="common__btn">
                                         Reply
                                     </button>
                                     <button type="button" class="common__btn">Reply to ALL</button>
                                     <button type="button" class="common__btn">Send to another</button>
                                     <button type="button" class="common__btn">Print</button>
                                     <button type="button" class="common__btn">SAVE</button>
-                                    <button @click="moveToTrash(message.id)" type="button" class="common__btn trash--btn">
+                                    <button @click="moveToTrash(messageDetails.id)" type="button" class="common__btn trash--btn">
                                         <span><img src="/assets/img/trash-1.png" alt=""></span>
                                         <b>Put in TRASH</b>
                                     </button>
@@ -127,12 +134,27 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </div>
                     </div>
                 </div>
+                <!--Loader while message details are being fetched -->
+                <div v-if="loading" class="tab-content" id="nav-tabContent" style="width:700px">
+                    <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
+                        aria-labelledby="nav-home-tab">
+                        <div class="loader"></div>
+                    </div>
+                </div>
             </div> 
+            <div v-if="loading && !messages.length" class="loader">
+                <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
+            </div>
+            <div v-if="messages.length && !messageDetails && !loading" class="show__address__book m-width">
+                <a href=""><span><i class="fal fa-address-book"></i></span>Show Full Address Book</a>
+            </div>
+            
         </div>
     </div>
 </template>
 
 <script>
+import * as Sentry from "@sentry/vue";
 import moment from 'moment';
 import axios from 'axios';
 /*import { mapState } from 'vuex';
@@ -141,10 +163,11 @@ import {Buffer} from 'buffer/';*/
 export default {
     data(){
         return{
-            messageIds: [],
             messages: [],
+            messageDetails: null,
+            nextPageToken: null,
             moment: moment,
-            test: []
+            loading: false
         }
     },
 
@@ -174,25 +197,19 @@ export default {
     },*/ 
     methods:{
         getInboxMessages(){
-            axios.get('api/users/me/messages/inbox')
+            this.messages = [];
+            this.loading = true;
+            axios.get(`api/users/me/messages/inbox?nextPage=${this.nextPageToken}`)
                 .then(payload => {
                     if(!payload.data.error){
                         this.messages = payload.data.data;
+                        this.nextPageToken = payload.data.nextPageToken;
                     }
+                    this.loading = false;
                 })
-                .catch(err => console.log(err));
-            /*gapi.client.gmail.users.messages.list({
-                userId: 'me',
-                labelIds: ['INBOX'],
-                maxResults: 20,
-                includeSpamTrash: false
-            })
-            .then(res => {
-                this.messageIds = res.result.messages;
-                for(const message of this.messageIds){
-                    this.getSingleProcessedMessage(message.id);
-                }
-            });*/
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         moveToTrash(messageId){
@@ -200,7 +217,9 @@ export default {
                 .then(payload => {
                     this.messages = this.messages.filter(msg => msg.id != payload.data.data.id)
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         replyClicked(message){
@@ -217,15 +236,43 @@ export default {
         getThreads(){
             axios.get('api/users/me/threads')
                 .then(response => console.log(response))
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         },
 
         getThreadMessages(){
             axios.get('api/users/me/thread/17b9c7f7efe196b6/messages')
                 .then(payload => console.log(payload))
-                .catch(err => console.log(err))
+                .catch(err => {
+                    Sentry.captureException(err);
+                })
         },
 
+        truncatedSubject(subject){
+            if(typeof subject !== "string") return '';
+
+            const maxLength = 20;
+            //truncate subject if it exceeds the given maxLength
+            if(subject.length > maxLength){
+                return subject.slice(0, maxLength) + " ...";
+            }
+            return subject;
+        },
+
+        getMessageDetails(messageId){
+            this.loading = true;
+            axios.get(`api/users/me/message/${messageId}`)
+                .then(payload => {
+                    if(!payload.data.error){
+                        this.messageDetails = payload.data.data;
+                    }
+                    this.loading = false;
+                })
+                .catch(err => {
+                    Sentry.captureException(err);
+                })
+        }
         /*getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({
                 userId: 'me',
@@ -356,3 +403,20 @@ export default {
     }
 }
 </script>
+
+<style>
+.common__tab__area.diff nav{
+    width:270px;
+    flex: 0 0 270px;
+}
+.nav.nav-tabs button + a{
+    margin-right: 0;
+}
+.msg-body{
+    max-height:250px;
+    overflow-y:auto;
+}
+.common__mail__body{
+    max-height:300px;
+}
+</style>

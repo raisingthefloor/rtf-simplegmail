@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <div class="common__area ">
-                <div class="common__tab__area">
+                <div v-if="messages.length" class="common__tab__area">
                     <nav>
                         <div class="nav__title">
                             <h5>DRAFTs I started <br> but did not  send yet</h5>
@@ -130,6 +130,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </div>
                     </div>
                 </div> 
+                <div v-else class="loader">
+                    Loading
+                    <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
+                </div>
             </div>
     </div>
 </template>
@@ -137,6 +141,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import * as Sentry from "@sentry/vue";
 export default {
     data(){
         return{
@@ -155,7 +160,9 @@ export default {
                 .then(payload => {
                     this.messages = payload.data.data;
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         }
     }
 }

@@ -81,6 +81,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <script>
 import axios from 'axios';
+import * as Sentry from "@sentry/vue";
 export default {
     data(){
         return{
@@ -105,7 +106,9 @@ export default {
             window.location.href = res.data.url;
           }
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          Sentry.captureException(err);
+        });
       },
 
       /*onSubmit(){
@@ -203,7 +206,9 @@ export default {
               }
             }
           })
-        .catch(err => console.log(err))
+        .catch(err => {
+          Sentry.captureException(err);
+        })
       },
 
       proceedWithLogin(userPayload){

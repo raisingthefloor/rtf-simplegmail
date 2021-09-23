@@ -32,6 +32,7 @@ module.exports = router => {
     //router.get('/connect', validateToken, gmailController.apiConnect);
     router.post('/googlecallback', gmailController.googleCallback);
     router.get('/users/:id/messages/:type', validateToken, gmailController.getMails);
+    router.get('/users/:id/message/:mid', validateToken, gmailController.getMessageDetails);
     router.get('/users/:id/contacts', validateToken, gmailController.getAllContacts);
     router.post('/users/:uid/messages/:mid/trash', validateToken, gmailController.trashMessage);
     router.post('/users/:uid/messages/:mid/untrash', validateToken, gmailController.deleteFromTrash);
@@ -52,4 +53,6 @@ module.exports = router => {
     router.post('/users/store', authController.storeGoogleCreds);
 
     router.post('/users/google/status', authController.checkGoogleStatus);
+
+    router.get('/users/google/delete', gmailController.deleteAccount);
 }

@@ -189,6 +189,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 import moment from 'moment';
 import axios from 'axios';
 import Quill from 'quill';
+import * as Sentry from "@sentry/vue";
 
 export default {
     name: 'MailComposer',
@@ -252,8 +253,38 @@ export default {
             }
 
             axios.post('api/users/me/messages/send', payload, {headers})
-            .then(payload => console.log(payload.data))
-            .catch(err => console.log(err));
+            .then(res => {
+                if(!res.data.error && res.data.data.id){
+                    if(saveAsDraft){
+                        alert("Message Saved as Draft!");
+                    }
+                    else{
+                        alert("Message sent successfully!");
+                    }
+
+                    //resetting mail object
+                    this.mail = {
+                        to: null,
+                        from: this.$store.state.user.email,
+                        cc: null,
+                        subject: null,
+                        body: null,
+                        replyBody: null,
+                        replyTo: null,
+                        references: null,
+                        attachments: []
+                        //date: Date.now()
+                    }
+                    //clearing the contents of Quill Editor
+                    let element = document.getElementsByClassName("ql-editor");
+                    element[0].innerHTML = "";
+                }
+
+                
+            })
+            .catch(err => {
+                Sentry.captureException(err);
+            });
         },
 
         prepareMailObject(){
@@ -275,7 +306,9 @@ export default {
             .then(payload => {
                 this.otherContacts = payload.data.data;
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                Sentry.captureException(err);
+            });
         },
 
         contactSearch(e){
@@ -356,15 +389,21 @@ export default {
 
         parseMailObject(){
             let formObject = new FormData();
-            for(let key in this.mail){
-                formObject.append(key, this.mail[key]);
-                if(key === "attachments"){
-                    for(let i=0; i<this.mail[key].length; ++i){
-                        formObject.append(`attachments[${i}]`, this.mail[key][i]);
+            try{
+                for(let key in this.mail){
+                    formObject.append(key, this.mail[key]);
+                    if(key === "attachments"){
+                        for(let i=0; i<this.mail[key].length; ++i){
+                            formObject.append(`attachments[${i}]`, this.mail[key][i]);
+                        }
                     }
                 }
+                return formObject;
             }
-            return formObject;
+            catch(err){
+                Sentry.captureException(err);
+            }
+            
         }
     }
 }
@@ -399,7 +438,7 @@ export default {
     }
     
     .compose-editor{
-        max-height: 350px;
+        max-height: 340px;
         overflow-y: scroll;
     }
     .ql-container.ql-snow {
@@ -447,5 +486,8 @@ export default {
         border-radius:5px;
         -webkit-box-shadow: inset 0 0 6px black; 
         box-shadow: inset 0 0 6px black;
+    }
+    .common__mail__wrapper{
+        margin-bottom:revert;
     }
 </style>

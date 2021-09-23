@@ -26,13 +26,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div class="text-center mt-4">
         <main class="form-signin">
-            <h1 class="h3 mb-3 fw-normal mt-2">Processing...</h1>
+            <div class="loader">Please wait...</div>
         </main>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
+import * as Sentry from "@sentry/vue";
 export default {
     name: 'GoogleCallback',
 
@@ -54,8 +55,17 @@ export default {
                             this.$router.push('/inbox');
                         }
                     }
+                    else{
+                        alert('Oops! Something went wrong. Please try again later');
+                        this.$router.push('/login');        
+                    }
                 })
-                .catch(err => console.log(err))
+                .catch(err => {
+                    Sentry.captureException(err);
+                })
+            }
+            else{
+                this.$router.push('/login');
             }
         }
     }

@@ -31,7 +31,7 @@ exports.getToken = async function (code) {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS)
         const {client_secret, client_id, redirect_uris} = credentials.web
         const oAuth2Client = new google.auth.OAuth2(
-            client_id, client_secret, redirect_uris[1]);
+            client_id, client_secret, redirect_uris[4]);
         oAuth2Client.getToken(code, (err, token) => {
 
             if (err) return logger.error('Error retrieving access token', err);
@@ -59,12 +59,12 @@ exports.getUserProfile = async function (auth) {
 }
 
 //get processed message details for single message
-exports.getSingleProcessedMessageDetails = async function (auth, message) {
+exports.getSingleProcessedMessageDetails = async function (auth, messageId) {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth})
         gmail.users.messages.get({
             userId: 'me',
-            id: message.id
+            id: messageId
         }, (err, res) => {
             if (err) return logger.error('The API returned an error: ' + err + ' and Message ID: ' + message.id)
 
@@ -220,26 +220,30 @@ exports.getSingleProcessedMessageDetails = async function (auth, message) {
 /**
  * args OAuth2Client instance, an array of string labelIds
  */
-exports.getMessages = async function (auth, labelIds) {
+exports.getMessages = async function (auth, labelIds, pageToken) {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth})
 
         gmail.users.messages.list({
             userId: 'me',
             labelIds: labelIds,
-            maxResults: 20,
+            maxResults: 10,
+            pageToken,
             includeSpamTrash: false
         }, (err, res) => {
-            if (err) return logger.error('The API returned an error: ' + err)
+            if (err){
+                logger.error('The API returned an error: ' + err);
+                reject([]);
+                throw err;
+            } 
             //console.log("res.data.messages", res)
             if(res.data && res.data.messages)
             {
-                resolve(res.data.messages)
+                resolve({messages:res.data.messages, nextPageToken: res.data.nextPageToken ?? null});
             }
             else
             {
-                resolve([])
-                //reject("Unable to data from gmail.users.messages")
+                resolve([]);
             }
         })
 
@@ -355,6 +359,7 @@ exports.sendMail = async(raw, auth) => {
         });
     });
 }
+
 //saves a raw message as draft
 exports.saveAsDraft = async (raw, auth) => {
     return new Promise((resolve, reject) => {
@@ -436,6 +441,7 @@ exports.modifyLabels = async (params, auth) => {
     });
 }
 
+//Get Labels from Gmail Server
 exports.getLabels = async auth => {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth});
@@ -453,6 +459,7 @@ exports.getLabels = async auth => {
     });
 }
 
+//Creates a new user defined label on Gmail Server
 exports.addLabels = async (labelOptions, auth) => {
     return new Promise((resolve, reject) => {
         const gmail = google.gmail({version: 'v1', auth});
@@ -461,7 +468,7 @@ exports.addLabels = async (labelOptions, auth) => {
             resource: labelOptions
         }, (err, res) => {
             if(!err){
-                console.log(res.data)
+                //console.log(res.data)
                 resolve(res.data);
             }
             else{
@@ -469,5 +476,57 @@ exports.addLabels = async (labelOptions, auth) => {
                 reject([]);
             }
         });  
+    });
+}
+
+//fetches attachment from Gmail Server
+exports.attachmentData = async function (auth, messageId, attachment) {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({version: 'v1', auth})
+        gmail.users.messages.attachments.get({
+            userId: 'me',
+            messageId: messageId,
+            id: attachment.body.attachmentId
+        }, (err, res) => {
+            if(!err) resolve(res.data);
+            else return logger.error(`Error while fetching attachment : ${err}`);            
+        })
+    })
+}
+
+exports.revokeToken = async({oAuth2Client, user}) => {
+    let token = oAuth2Client.credentials.refresh_token;
+    return new Promise((resolve, reject) => {
+        oAuth2Client.revokeToken(token, function(err, body) {
+            if(!err){
+                //console.log(body);
+                user.delete();
+                resolve('Email Removed Successfully');
+            }
+            else{
+                logger.error(`Error while revoking token : ${err}`);
+                reject('Error while revoking token');
+            }
+        });
+    });
+}
+
+exports.getSingleMessageMetadata = async (auth, messageId) => {
+    return new Promise((resolve, reject) => {
+        const gmail = google.gmail({version: 'v1', auth});
+        gmail.users.messages.get({
+            userId: 'me',
+            id: messageId,
+            format: 'metadata',
+            metadataHeaders: ['From', 'To', 'Subject', 'Date']
+        }, (err, res) => {
+            if(err){
+                logger.error(`Error while fetching message metadata : ${err}`);
+                reject({});
+            }
+            else{
+                resolve(res.data);
+            }
+        });               
     });
 }

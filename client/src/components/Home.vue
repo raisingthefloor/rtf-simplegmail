@@ -66,6 +66,7 @@ import Header from './Header.vue';
 import Sidebar from './Sidebar.vue';
 import MainArea from './MainArea.vue';
 import axios from 'axios';
+import * as Sentry from "@sentry/vue";
 //import { mapState } from 'vuex';
 export default{
   components: {
@@ -186,7 +187,9 @@ export default{
             console.log(res);
             this.fetchGoogleLabels();
           })
-          .catch(e => console.log(e));
+          .catch(err => {
+            Sentry.captureException(err);
+          });
       }
     },
 
@@ -197,7 +200,9 @@ export default{
             this.labels = res.data.data;
           }
         })
-        .catch(e => console.log(e));
+        .catch(err => {
+          Sentry.captureException(err);
+        });
     }
   }
 }

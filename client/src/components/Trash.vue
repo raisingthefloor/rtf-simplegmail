@@ -25,7 +25,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <div class="common__area ">
-            <div class="common__tab__area diff">    
+            <div v-if="messages.length" class="common__tab__area diff">    
                 <nav>
                     <div class="nav__title bg-red d-flex align-items-center justify-content-center">
                         <h5>TRASH</h5>
@@ -136,12 +136,17 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     
                 </div>
             </div>
+            <div v-else class="loader">
+                Loading
+                <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
+            </div>
         </div>        
     </div>
 </template>
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import * as Sentry from "@sentry/vue";
 export default {
     data(){
         return{
@@ -169,7 +174,9 @@ export default {
                 .then(payload => {
                     this.messages = this.messages.filter(msg => msg.id != payload.data.data.id);
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
             }
         },
 
@@ -180,9 +187,11 @@ export default {
             }
             axios.post(`api/users/me/messages/${messageId}/restore`, payload)
                 .then(payload => {
-                    this.messages = this.messages.filter(msg => msg.id != payload.data.id);
+                    this.messages = this.messages.filter(msg => msg.id != payload.data.data.id);
                 })
-                .catch(e => console.log(e));
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         }
     }
 }
