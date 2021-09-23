@@ -49,7 +49,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         let redirectUrlIndex = redirect_uris.findIndex(uri => this.redirectUrl === uri);
-        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[4]);
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
     }
 
     //methods to handle requests
