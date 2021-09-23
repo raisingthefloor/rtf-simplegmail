@@ -49,7 +49,7 @@ class GmailController{
         const {client_secret, client_id, redirect_uris} = credentials.web;
         //using OAuthClient object for authentication and authorization
         let redirectUrlIndex = redirect_uris.findIndex(uri => this.redirectUrl === uri);
-        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[1]);
+        return new google.auth.OAuth2(client_id, client_secret, redirect_uris[4]);
     }
 
     //methods to handle requests
@@ -212,9 +212,10 @@ class GmailController{
     }
 
     getMails = async (req, res) => {
-        let response = {error: false, data: []};
-
+        let response = {error: false, data: [], nextPageToken: null};
         let labelIds = [req.params.type.toUpperCase()];
+        let  {nextPage} = req.query;
+        nextPage = nextPage === "null" ? '' : nextPage;
 
         //get OAuth2Client Client
         const oAuth2Client = this.getOAuth2Client();
@@ -232,31 +233,40 @@ class GmailController{
                 //check auth code is not empty
                 if(Object.keys(googleAuthCode).length){
                     oAuth2Client.setCredentials(googleAuthCode);
-                    //oAuth2Client.currentClassPointer = this;
 
-                    //const gmail = google.gmail({version: 'v1', oAuth2Client});
-                    
-                    let allMails = await GoogleManager.getMessages(oAuth2Client, labelIds);
-                    
-                    //console.log("allUnreadMails", allUnreadMails)
-                    for (let mail of allMails)
-                    {
-                        let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail);
-                        let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
-                        
-                        if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
-                        {
-                            let i = 0
-                            for (let attachment of mail_detail.decoded_attachments)
-                            {
-                                let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
-                                mail_detail.decoded_attachments[i].attachment_data = attachment_data;
-                                i++;
-                            }
+                    //get a specified number of mail containing threadId and messageId
+                    let responseObj = await GoogleManager.getMessages(oAuth2Client, labelIds, nextPage);
+                    let {messages, nextPageToken} = responseObj;
+                    let allMails = messages;
+                    response.nextPageToken = nextPageToken;
+                    if(req.params.id){
+                        //fetch message metadata for allMails
+                        for(let mail of allMails){
+                            let mail_meta = await GoogleManager.getSingleMessageMetadata(oAuth2Client, mail.id);
+                            allMailDetails.push(mail_meta);
                         }
-
-                        allMailDetails.push(mail_detail)
                     }
+                    else{
+                        for (let mail of allMails)
+                        {
+                            let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail);
+                            let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
+                            
+                            if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                            {
+                                let i = 0
+                                for (let attachment of mail_detail.decoded_attachments)
+                                {
+                                    let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
+                                    mail_detail.decoded_attachments[i].attachment_data = attachment_data;
+                                    i++;
+                                }
+                            }
+
+                            allMailDetails.push(mail_detail)
+                        }
+                    }
+                                        
                     response.data = allMailDetails;
                 }
             }
@@ -631,6 +641,52 @@ class GmailController{
             response.error = true;
         }
         
+        res.send(response);
+    }
+
+    getMessageDetails = async (req, res) =>{
+        let response = {error: false, data: null};
+        let messageId = req.params.mid;
+        //an object that will contact a single message details
+        try{
+            //get Oauth2client instance
+            const oAuth2Client = this.getOAuth2Client();
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                //get google authentication token from user
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    //getting the whole message with headers and body
+                    let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, messageId);
+                    //let message_Id = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
+                    //fetch attachments if message has any    
+                    if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)
+                    {
+                        let i = 0
+                        for (let attachment of mail_detail.decoded_attachments)
+                        {
+                            let attachment_data = await GoogleManager.attachmentData(oAuth2Client, messageId, attachment);
+                            mail_detail.decoded_attachments[i].attachment_data = attachment_data;
+                            i++;
+                        }
+                    }
+
+                    response.data = mail_detail;
+                }
+            }
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(`Error while fetching message details : ${exp}`);
+            response.error = true;
+        }
+
         res.send(response);
     }
 

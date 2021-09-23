@@ -438,7 +438,7 @@ export default {
     }
     
     .compose-editor{
-        max-height: 350px;
+        max-height: 340px;
         overflow-y: scroll;
     }
     .ql-container.ql-snow {
@@ -486,5 +486,8 @@ export default {
         border-radius:5px;
         -webkit-box-shadow: inset 0 0 6px black; 
         box-shadow: inset 0 0 6px black;
+    }
+    .common__mail__wrapper{
+        margin-bottom:revert;
     }
 </style>
