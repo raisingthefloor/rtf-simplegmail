@@ -34,7 +34,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
           </div>
 
           <button class="w-100 btn btn-lg btn-danger mt-2" :disabled="!email.length" type="submit">
-            <span>Delete</span>
+            <span>{{btnLbl}}</span>
           </button>
       </form>
     </main>
@@ -46,17 +46,20 @@ import axios from 'axios';
 export default {
     data(){
         return{
-            email: ''
+            email: '',
+            btnLbl: 'Delete'
         }
     },
 
     methods:{
         onSubmit(){
             if(this.email){
+              this.btnLbl = "Please wait...";
                 axios.get(`api/users/google/delete?email=${this.email}&isDelete=true`)
                     .then(res => {
                       alert(res.data.message);
                       this.email = '';
+                      this.btnLbl = 'Delete';
                     })
                     .catch(e => console.log(e));
             }

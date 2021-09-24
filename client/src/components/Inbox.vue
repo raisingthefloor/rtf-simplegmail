@@ -412,11 +412,11 @@ export default {
 .nav.nav-tabs button + a{
     margin-right: 0;
 }
-.msg-body{
+/*.msg-body{
     max-height:250px;
     overflow-y:auto;
 }
 .common__mail__body{
     max-height:300px;
-}
+}*/
 </style>
