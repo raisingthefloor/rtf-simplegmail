@@ -42,11 +42,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                       <div class="single-input-item">
                           <input type="text" v-model="labelName" class="int">
                       </div>
-                      <div class="single-input-item">
+                      <!-- <div class="single-input-item">
                           <select class="form-select int" name="" id="">
                               <option v-for="number in 4" :key="number" :option="number">{{number}}</option>
                           </select>
-                      </div>
+                      </div> -->
                   </div>
                   <div class="modal-footer">
                       <button type="button" id="close-modal" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
