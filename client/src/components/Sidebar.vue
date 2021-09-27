@@ -128,7 +128,7 @@ export default {
                         imgSrc += "trash-1.png";
                     }
                     else if(label.name == "SPAM"){
-                        route = "";
+                        route = "/spam";
                         text = "? Junk mail ?";
                         imgSrc = null;
                     }
