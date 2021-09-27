@@ -272,6 +272,7 @@ class GmailController{
             }
         }
         catch(exp){
+            response.data = exp;
             Sentry.captureException(exp);
             logger.error(exp);
             response.error = true;
@@ -603,6 +604,7 @@ class GmailController{
             response.data = labels;
         }
         catch(e){
+            response.data = e;
             Sentry.captureException(e);
             logger.error(`Error while fetching labels : ${e}`);
             response.error = true;
