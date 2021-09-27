@@ -71,7 +71,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         <p>{{moment(+messageDetails.internalDate).format('DD/MM/YY hh:ss a')}}</p>
                                     </div>
                                 </div>
-                                <div @click="moveToTrash(messageDetails.id)" title="Move to Trash" class="mail__close">
+                                <div @click="closeMail" title="Close Mail" class="mail__close">
                                     <i class="far fa-times"></i>
                                 </div>
                             </div>
@@ -146,7 +146,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                 <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
             </div>
             <div v-if="messages.length && !messageDetails && !loading" class="show__address__book m-width">
-                <a href=""><span><i class="fal fa-address-book"></i></span>Show Full Address Book</a>
+                <router-link to="/address-book">
+                    <span><i class="fal fa-address-book"></i></span>Show Full Address Book
+                </router-link>
             </div>
             
         </div>
@@ -213,13 +215,18 @@ export default {
         },
 
         moveToTrash(messageId){
-            axios.post(`api/users/me/messages/${messageId}/trash`)
+            if(confirm("Are you sure you want to send this mail to Trash?")){
+                this.loading = true;
+                axios.post(`api/users/me/messages/${messageId}/trash`)
                 .then(payload => {
-                    this.messages = this.messages.filter(msg => msg.id != payload.data.data.id)
+                    this.messages = this.messages.filter(msg => msg.id != payload.data.data.id);
+                    this.loading = false;
+                    this.closeMail();
                 })
                 .catch(err => {
                     Sentry.captureException(err);
                 });
+            }
         },
 
         replyClicked(message){
@@ -266,12 +273,70 @@ export default {
                 .then(payload => {
                     if(!payload.data.error){
                         this.messageDetails = payload.data.data;
+                        if(this.messageDetails.decoded_attachments?.length){
+                            let parsedAttachment = this.parseAttachments(this.messageDetails.decoded_attachments);
+                            if(this.messageDetails.decoded_parts){
+                                this.messageDetails.decoded_parts[0] += parsedAttachment;
+                            }
+                            else{
+                                this.messageDetails.snippet += parsedAttachment;
+                            }
+                        }
                     }
                     this.loading = false;
                 })
                 .catch(err => {
                     Sentry.captureException(err);
                 })
+        },
+
+        closeMail(){
+            this.messageDetails = null;
+            let activeElement = document.querySelector('.nav-link.active');
+            activeElement.classList.remove('active');
+        },
+
+        parseAttachments(decodedAttachments){
+            let attachmentHTML = "";
+            for(let attachment of decodedAttachments){
+                if (attachment.attachment_data.data.length > 0)
+                {
+                    let dataBase64Rep = attachment.attachment_data.data.replace(/-/g, '+').replace(/_/g, '/');
+                    let urlBlob = this.b64toBlob(dataBase64Rep, attachment.mimeType, attachment.attachment_data.size);
+
+                    attachmentHTML += `<a href="`+urlBlob+`" download="`+attachment.filename+`"> <div style="margin-top: 0.5rem; padding: 0.3rem; border: 1px solid #ccc; cursor: pointer;">
+                    `+attachment.filename+`
+                    </div></a>`
+                    //URL.revokeObjectURL(urlBlob)
+                }
+            }
+            
+            return attachmentHTML;
+        },
+
+        b64toBlob (b64Data, contentType, sliceSize) {
+            contentType = contentType || ''
+            sliceSize = sliceSize || 512
+
+            var byteCharacters = atob(b64Data)
+            var byteArrays = []
+
+            for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                var slice = byteCharacters.slice(offset, offset + sliceSize)
+
+                var byteNumbers = new Array(slice.length)
+                for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i)
+                }
+
+                var byteArray = new Uint8Array(byteNumbers)
+
+                byteArrays.push(byteArray)
+
+            }
+            var blob = new Blob(byteArrays, {type: contentType})
+            let urlBlob = URL.createObjectURL(blob)
+            return urlBlob
         }
         /*getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({

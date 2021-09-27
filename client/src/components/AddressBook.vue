@@ -28,7 +28,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="common__area ">
             <div class="hide__address__area__book">
                 <div class="show__address__book m-width bg-black">
-                    <a href=""><span><i class="fal fa-address-book"></i></span>Hide Address Book</a>
+                    <a href="javascript:void(0)"><span><i class="fal fa-address-book"></i></span>Hide Address Book</a>
                 </div>
                 <div class="address__book__wrapper">
                     <nav>
@@ -38,22 +38,25 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <button v-for="(contact, index) in filteredContacts" :key="index" :class="['nav-link', index == 0 ? 'active' : '']" id="nav-home-tab" data-bs-toggle="tab"
                                 :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
                                 aria-selected="true">
-                                {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}
+                                {{contact.names ? contact.names[0]?.displayName : contact.emailAddresses ? contact.emailAddresses[0]?.value : ''}}
                             </button>
                             
                         </div>
+                        <div v-else>
+                            <p>No contacts found</p>
+                        </div>
                     </nav>
-                    <div class="tab-content" id="nav-tabContent">
+                    <div v-if="filteredContacts.length" class="tab-content" id="nav-tabContent">
                         <div v-for="(contact, index) in filteredContacts" :key="index" :class="['tab-pane fade', index == 0 ? 'show active' : '']" :id="'nav-home-'+index" role="tabpanel"
                             aria-labelledby="nav-home-tab">
 
                             <div class="user__address__wrapper">
                                 <div class="address__profile">
                                     <div class="address__pro-thumb">
-                                        <a v-if="contact.photos"> <img :src="contact.photos[0].url" alt="profile"></a>
+                                        <a v-if="contact.photos"> <img :src="contact.photos[0]?.url" alt="profile"></a>
                                     </div>
                                     <a href="javascript:void(0)">
-                                        {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}
+                                        {{contact.names ? contact.names[0]?.displayName : contact.emailAddresses ? contact.emailAddresses[0]?.value : ''}}
                                     </a>
                                 </div>
                                 <div class="mail-title">
@@ -61,12 +64,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </div>
                                 <div class="user--email">
                                     <a href="javascript:void(0)">
-                                        {{contact.emailAddresses[0].value}}
+                                        {{contact.emailAddresses ? contact.emailAddresses[0]?.value : ''}}
                                     </a>
                                 </div>
                                 <div class="user__address__details">
                                     <h5>Phone </h5>
-                                    <p> Cell: {{contact.phoneNumbers ? contact.phoneNumbers[0].value : ''}} </p>
+                                    <p> Cell: {{contact.phoneNumbers ? contact.phoneNumbers[0]?.value : ''}} </p>
                                     <p> Home: - </p>
                                 </div>
                                 <div class="user__address__details">
@@ -82,9 +85,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
                         </div>
                     </div>
+                    <div v-else class="text-center mt-4" style="width:100%">
+                        <h5>No Contact Information</h5>
+                    </div>
                     
                     <div class="book__pagination">
-                        <h6>★</h6>
+                        <h6 style="cursor:pointer" @click="filterKey=''" title="Reset Filter">★</h6>
                         <ul>
                             <li v-for="(letter, index) in alphabetIterator" :key="index">
                                 <a href="javascript:void(0)" @click="filterKey=letter.toLowerCase()">{{letter}}</a>
@@ -116,8 +122,8 @@ export default {
     computed:{
         filteredContacts(){
             return this.contacts.filter(contact => {
-                return (contact.names[0]?.displayName.toLowerCase().startsWith(this.filterKey) 
-                || contact.emailAddresses[0]?.value.toLowerCase().startsWith(this.filterKey));
+                return (contact.names ? contact.names[0]?.displayName.toLowerCase().startsWith(this.filterKey) : false 
+                || contact.emailAddresses ? contact.emailAddresses[0]?.value.toLowerCase().startsWith(this.filterKey) : false);
             });
         },
 

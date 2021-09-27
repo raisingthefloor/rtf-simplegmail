@@ -10,6 +10,10 @@ const routes = [
         },
         children: [
             {
+                path: '/:pathMatch(.*)',
+                component: () => import('../components/NoMail.vue')
+            },
+            {
                 path: "/inbox",
                 name: "Inbox",
                 component: () => import('../components/Inbox.vue')
