@@ -299,9 +299,10 @@ class GmailController{
             if(Object.keys(googleAuthCode).length){
                 oAuth2Client.setCredentials(googleAuthCode);
 
-                contacts = await GoogleManager.listAllConnections(oAuth2Client);
+                //contacts = await GoogleManager.listAllConnections(oAuth2Client);
+                contacts = await GoogleManager.getOtherContacts(oAuth2Client);
             }
-            response.data = contacts;
+            response.data = contacts ?? [];
         }
         catch(exp){
             Sentry.captureException(exp);
