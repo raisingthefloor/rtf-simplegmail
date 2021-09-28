@@ -495,7 +495,7 @@ exports.attachmentData = async function (auth, messageId, attachment) {
 }
 
 exports.revokeToken = async({oAuth2Client, user}) => {
-    let token = oAuth2Client.credentials.refresh_token;
+    let token = oAuth2Client.credentials.refresh_token || oAuth2Client.credentials.access_token;
     return new Promise((resolve, reject) => {
         oAuth2Client.revokeToken(token, function(err, body) {
             if(!err){
