@@ -170,9 +170,11 @@ class GmailController{
             
             //gets exisiting user or null
             let user = await User.findOne({email});
+            
             //if user does not exists, create one
             if(!user) user = await this.storeUser({name, email, token});
-            
+            //update the user with refresh token or access token
+            if(user && token.refresh_token) user = await this.updateUserToken({user, token});
             let jwt = AuthManager.createJWT({id:user._id});
             response.data = {name, email, token:jwt, 
                 hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
@@ -187,23 +189,30 @@ class GmailController{
     }
 
     storeUser = async({name, email, token}) => {
+        email = email.toLowerCase();
         try{
             token = JSON.stringify(token);
-            //if(!user){
-                const newUser = new User({
-                    name,
-                    email,
-                    googleAuth: token
-                });
-    
-                await newUser.save();
-            //}
-            /*else{
-                //saving the token in user object
-                user.googleAuth = token;
-                await user.save();
-            }*/
+            const newUser = new User({
+                name,
+                email,
+                googleAuth: token
+            });
+
+            await newUser.save();
             return newUser;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error(`Error while creating new user : ${exp}`);
+        }
+    }
+
+    updateUserToken = async ({user, token}) => {
+        try{
+            token = JSON.stringify(token);
+            user.googleAuth = token;
+            await user.save();
+            return user;
         }
         catch(exp){
             Sentry.captureException(exp);
@@ -719,7 +728,6 @@ class GmailController{
         }
         catch(e){
             Sentry.captureException(e);
-            response.message = "Server Error";
             response.error = true;
             logger.error(e);
         }
