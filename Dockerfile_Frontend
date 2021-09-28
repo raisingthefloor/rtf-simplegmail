@@ -1,0 +1,11 @@
+#!/bin/bash
+FROM node:latest
+WORKDIR /usr/src/app/simplegmail_frontend
+
+COPY client/package*.json ./
+
+RUN npm install
+RUN npm update --force
+COPY client .
+EXPOSE 4000
+CMD ["npm", "run", "serve", "--", "--port", "4000"]

@@ -1,0 +1,13 @@
+#!/bin/bash
+FROM node:latest
+# Create app directory
+WORKDIR /usr/src/app/simplegmail_backend
+# Install app dependencies
+COPY server/package*.json ./
+RUN npm install --production
+RUN npm install pm2 -g
+# Copy app source code
+COPY server .
+#Expose port and start application
+EXPOSE 4080
+CMD [ "pm2-runtime", "server.js" ]

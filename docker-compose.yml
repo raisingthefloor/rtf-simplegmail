@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile_Frontend
+    ports:
+      - "4000:4000"
+    container_name: simplegmail_frontend
+    environment:
+      - TARGET_URL=http://backend:4080
+      - PORT=4000
+    #        - VUE_APP_ENV=development
+    depends_on:
+      - backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_Backend
+    ports:
+      - "4080:4080"
+    container_name: simplegmail_backend
+    environment:
+      - port=4080
+      - HOST=mongo-db-simplegmail
+      - SSL_DOMAIN=simplegmail.plenartech.com
+      - NODE_LOCAL_HOST=true
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - database
+  database:
+    image: mongo
+    environment:
+      - DOCKER=1
+    container_name: mongo-db-simplegmail
+    volumes:
+      - mongodb:/data/db
+    ports:
+      - "27018:27017"
+    restart: always
+volumes:
+  mongodb:
