@@ -33,7 +33,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>TO:</p>
                                     <div class="mail__write__input__field dropdown-container">
-                                        <input name="to" id="to" v-model="mail.to" type="text" @keyup="contactSearch"/>
+                                        <input name="to" id="to" v-model="mail.to" type="text" @keyup="contactSearch"
+                                            @keyup.enter="hideSearchResult('to')" @keydown.tab="hideSearchResult('to')" @focus="setLastFocus"/>
+
                                         <div v-if="searchedContacts.length" class="dropdown-content">
                                             <div @click="contactSelected($event, 'to', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
                                                 <div class="user-avatar">
@@ -59,7 +61,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>Send a copy to:</p>
                                     <div class="mail__write__input__field dropdown-container">
-                                        <input name="cc" id="cc" v-model="mail.cc" type="text" @keyup="contactSearch" />
+                                        <input name="cc" id="cc" v-model="mail.cc" type="text" @keyup="contactSearch" 
+                                            @keyup.enter="hideSearchResult('cc')" 
+                                            @keydown.tab="hideSearchResult('cc')" 
+                                            @focus="setLastFocus"
+                                        />
+
                                         <div v-if="searchedContacts.length" class="dropdown-content">
                                             <div @click="contactSelected($event, 'cc', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
                                                 <div class="user-avatar">
@@ -87,7 +94,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <p>1/19/20 8:30am</p>
                                 </div>
                             </div> -->
-                            <div class="mail__close">
+                            <div class="mail__close" title="Close" @click="resetMail">
                                 <i class="far fa-times"></i>
                             </div>
                         </div>
@@ -175,7 +182,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <h6>Commonly Used Addresses </h6>
                         </div>
                         <div class="used__adresses__item" v-if="otherContacts.length">
-                            <div v-for="contact in otherContacts" :key="contact.etag" class="address__item">
+                            <div v-for="contact in otherContacts" :key="contact.etag" class="address__item" @mousedown="pushToActiveFields(contact)">
                                 {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}     
                             </div>
                         </div>
@@ -210,7 +217,9 @@ export default {
                 //date: Date.now()
             },
             otherContacts: [],
-            searchedContacts: []
+            searchedContacts: [],
+            inputIds: ['to', 'cc'],
+            lastFocused: null
         }
     },
 
@@ -218,6 +227,10 @@ export default {
         //is a replyTo mail
         if(this.$route.query.isReply){
             this.prepareMailObject();
+        }
+        //redirect from address book with to field
+        if(this.$route.query.toAddress){
+            this.mail.to = this.$route.query.toAddress;
         }
         this.getOtherContacts();
         this.initQuillEditor();
@@ -263,21 +276,7 @@ export default {
                     }
 
                     //resetting mail object
-                    this.mail = {
-                        to: null,
-                        from: this.$store.state.user.email,
-                        cc: null,
-                        subject: null,
-                        body: null,
-                        replyBody: null,
-                        replyTo: null,
-                        references: null,
-                        attachments: []
-                        //date: Date.now()
-                    }
-                    //clearing the contents of Quill Editor
-                    let element = document.getElementsByClassName("ql-editor");
-                    element[0].innerHTML = "";
+                    this.resetMail();
                 }
 
                 
@@ -333,7 +332,7 @@ export default {
             this.mail[mailProp] = email;
         },
 
-        onBlur(mailProp){
+        hideSearchResult(mailProp){
             let dropdown = document.querySelector(`#${mailProp} + .dropdown-content`);
             dropdown.style.display = "none";
         },
@@ -404,12 +403,76 @@ export default {
                 Sentry.captureException(err);
             }
             
+        },
+
+        resetMail(){
+            this.mail = {
+                to: null,
+                from: this.$store.state.user.email,
+                cc: null,
+                subject: null,
+                body: null,
+                replyBody: null,
+                replyTo: null,
+                references: null,
+                attachments: []
+                //date: Date.now()
+            }
+            //clearing the contents of Quill Editor
+            let element = document.getElementsByClassName("ql-editor");
+            element[0].innerHTML = "";
+        },
+
+        setLastFocus(evt){
+            if(evt.target) this.lastFocused = window.$(evt.target);
+        },
+
+        pushToActiveFields(contact){
+            let emailAddress = contact.emailAddresses ? contact.emailAddresses[0].value : '';  
+            //targetElement key will contain element id that is equal to mail object keys
+            let targetElementKey = '';
+            if(this.lastFocused){
+               targetElementKey = this.lastFocused.context.id; 
+            }
+            else{
+                targetElementKey = 'to';
+            }
+            if(this.mail[targetElementKey]){
+                let mailArray = this.mail[targetElementKey].split(',')
+                mailArray = mailArray.map(mail => mail.trim())
+                if(!mailArray.includes(emailAddress)){
+                    this.mail[targetElementKey] += `, ${emailAddress}`;
+                }
+                
+            }
+            else{
+                this.mail[targetElementKey] = emailAddress;
+            }
         }
     }
 }
 </script>
 
 <style>
+    /**Styles related to scrollbar */
+    ::-webkit-scrollbar {
+        width:8px;
+    }
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow:inset 0 0 6px rgba(0,0,0,0.3); 
+        box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius:5px;
+    }
+    ::-webkit-scrollbar-thumb {
+        border-radius:5px;
+        -webkit-box-shadow: inset 0 0 6px #333; 
+        box-shadow: inset 0 0 6px #333;
+    }
+
+    .common__mail__wrapper{
+        margin-bottom:revert;
+    }
+
     .reply-to-body{
         border-left: 2px solid black;
         padding: 0 10px;
@@ -423,6 +486,9 @@ export default {
         /* padding: 12px 16px; */
         z-index: 1;
         min-width: 300px;
+        max-height: 450px;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
     .dropdown-container{
         position: relative;
@@ -439,7 +505,8 @@ export default {
     
     .compose-editor{
         max-height: 340px;
-        overflow-y: scroll;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
     .ql-container.ql-snow {
         border: none;
@@ -467,27 +534,16 @@ export default {
         cursor: pointer;
     }
     .ql-editor{
-        min-height: 200px;
+        font-size:1.05rem;
+        min-height: 250px;
     }
     /*Setting max height of commonly used addresses and making it scrollable */
     .used__addresses{
         max-height: 72vh;
         overflow: auto;
     }
-    .used__addresses::-webkit-scrollbar {
-        width:8px;
-    }
-    .used__addresses::-webkit-scrollbar-track {
-        -webkit-box-shadow:inset 0 0 6px rgba(0,0,0,0.3); 
-        box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-        border-radius:5px;
-    }
-    .used__addresses::-webkit-scrollbar-thumb {
-        border-radius:5px;
-        -webkit-box-shadow: inset 0 0 6px black; 
-        box-shadow: inset 0 0 6px black;
-    }
-    .common__mail__wrapper{
-        margin-bottom:revert;
+    
+    .mail__write__input__field input{
+        width:500px;
     }
 </style>

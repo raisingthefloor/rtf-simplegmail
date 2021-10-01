@@ -162,11 +162,11 @@ class GmailController{
             const oAuth2Client = this.getOAuth2Client();
             oAuth2Client.setCredentials(token)
             
-            //get user profile
+            //get user profile data from People API
             userProfile = await GoogleManager.getUserProfile(oAuth2Client);
-            let name = userProfile.names[0]?.displayName;
-            let email = userProfile.emailAddresses[0]?.value;
-            response.data = {name, email};
+            let name = userProfile.names? userProfile.names[0]?.displayName : null;
+            let email = userProfile.emailAddresses ? userProfile.emailAddresses[0]?.value : null;
+            let profilePicUrl = userProfile.photos ? userProfile.photos[0]?.url: null;
             
             //gets exisiting user or null
             let user = await User.findOne({email});
@@ -176,7 +176,7 @@ class GmailController{
             //update the user with refresh token or access token
             if(user && token.refresh_token) user = await this.updateUserToken({user, token});
             let jwt = AuthManager.createJWT({id:user._id});
-            response.data = {name, email, token:jwt, 
+            response.data = {name, email, token:jwt, profilePicUrl,
                 hasGoogleAuth: user.googleAuth.length ? true : false, isAuthenticated: true};
         }
         catch(exp){

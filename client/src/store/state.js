@@ -1,6 +1,7 @@
 const userDefaults = {
     name : "",
     email: "",
+    profilePicUrl: "",
     //role: "",
     //googleEmail: "",
     token: null,

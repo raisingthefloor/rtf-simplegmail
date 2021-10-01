@@ -108,7 +108,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <div class="header__profile">
                                 <h6>Google</h6>
                                 <div class="profile-thumb">
-                                    <img src="/assets/img/profile.jpg" alt="">
+                                    <img v-if="appActiveUser.profilePicUrl" :src="appActiveUser.profilePicUrl" 
+                                        :alt="appActiveUser.email" :title="appActiveUser.name" />
+                                    <img v-else src="/assets/img/profile.jpg" :alt="appActiveUser.email" :title="appActiveUser.name"/>
+
                                 </div>
                             </div>
                         </a>
@@ -133,6 +136,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 </template>
 
 <script>
+import {mapState} from "vuex"
     export default{
         data(){
             return{
@@ -140,6 +144,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
             };
         },
 
+        computed:{
+            ...mapState(['appActiveUser'])
+        },
         methods: {
             logoutHandler(){
                 this.$store.commit('LOGOUT_USER');
