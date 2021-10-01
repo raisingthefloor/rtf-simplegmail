@@ -28,7 +28,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="common__area ">
             <div class="hide__address__area__book">
                 <div class="show__address__book m-width bg-black">
-                    <a href="javascript:void(0)"><span><i class="fal fa-address-book"></i></span>Hide Address Book</a>
+                    <router-link to="/mail-compose">
+                        <span><i class="fal fa-address-book"></i></span>Hide Address Book
+                    </router-link>
                 </div>
                 <div class="address__book__wrapper">
                     <nav>
@@ -62,10 +64,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="mail-title">
                                     To send email - Click email address
                                 </div>
-                                <div class="user--email">
-                                    <a href="javascript:void(0)">
+                                <div class="user--email" v-if="contact.emailAddresses">
+                                    <router-link :to="`/mail-compose?toAddress=${contact.emailAddresses[0].value}`">
                                         {{contact.emailAddresses ? contact.emailAddresses[0]?.value : ''}}
-                                    </a>
+                                    </router-link>
                                 </div>
                                 <div class="user__address__details">
                                     <h5>Phone </h5>

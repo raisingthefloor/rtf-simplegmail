@@ -50,9 +50,12 @@ exports.getUserProfile = async function (auth) {
 
         peopleService.people.get({
             resourceName: 'people/me',
-            personFields: 'names,emailAddresses',
+            personFields: 'names,emailAddresses,photos',
         }, (err, res) => {
-            if (err) return logger.error('The API returned an error: ' + err + 'Error while fetching profile');
+            if (err){
+                logger.error('The API returned an error: ' + err + 'Error while fetching profile');
+                reject(err);
+            }
             else resolve(res.data);
         })
     })
