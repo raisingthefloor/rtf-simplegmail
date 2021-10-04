@@ -33,8 +33,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>TO:</p>
                                     <div class="mail__write__input__field dropdown-container">
-                                        <input name="to" id="to" v-model="mail.to" type="text" @keyup="contactSearch"
-                                            @keyup.enter="hideSearchResult('to')" @keydown.tab="hideSearchResult('to')" @focus="setLastFocus"/>
+                                        <input name="to" id="to" v-model="mail.to" type="text"  @keyup="contactSearch"
+                                          @keyup.enter="hideSearchResult('to')" 
+                                          @keyup.tab="hideSearchResult('to')" 
+                                          @keyup.esc="hideSearchResult('to')"
+                                          @focus="setLastFocus"
+                                        />
 
                                         <div v-if="searchedContacts.length" class="dropdown-content">
                                             <div @click="contactSelected($event, 'to', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
@@ -63,7 +67,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <div class="mail__write__input__field dropdown-container">
                                         <input name="cc" id="cc" v-model="mail.cc" type="text" @keyup="contactSearch" 
                                             @keyup.enter="hideSearchResult('cc')" 
-                                            @keydown.tab="hideSearchResult('cc')" 
+                                            @keyup.tab="hideSearchResult('cc')" 
+                                            @keyup.esc="hideSearchResult('cc')" 
                                             @focus="setLastFocus"
                                         />
 
@@ -182,9 +187,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <h6>Commonly Used Addresses </h6>
                         </div>
                         <div class="used__adresses__item" v-if="otherContacts.length">
-                            <div v-for="contact in otherContacts" :key="contact.etag" class="address__item" @mousedown="pushToActiveFields(contact)">
+                            <a href="javascript:void(0)" style="display:block;text-decoration:none" v-for="contact in otherContacts" :key="contact.etag" class="address__item" @mousedown="pushToActiveFields(contact)">
                                 {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}     
-                            </div>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -206,7 +211,7 @@ export default {
             moment: moment,
             mail:{
                 to: null,
-                from: this.$store.state.user.email,
+                from: this.$store.state.user.name + ' <'+this.$store.state.user.email+'>',
                 cc: null,
                 subject: null,
                 body: null,
@@ -371,6 +376,8 @@ export default {
                 }
             });
             document.querySelector('.ql-editor').style.display = "none;";
+            //Setting tabindex=-1 for quill toolbar
+            window.$(".ql-toolbar *").attr('tabindex', '-1');
         },
 
         attachmentSelected(e){
@@ -421,6 +428,11 @@ export default {
             //clearing the contents of Quill Editor
             let element = document.getElementsByClassName("ql-editor");
             element[0].innerHTML = "";
+
+            //hiding the search result for to or cc
+            if(window.$(`#${this.lastFocused.context.id} + .dropdown-content`).css('display') !== "none"){
+                this.hideSearchResult(this.lastFocused.context.id);
+            }
         },
 
         setLastFocus(evt){

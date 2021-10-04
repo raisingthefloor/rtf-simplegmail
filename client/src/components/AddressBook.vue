@@ -28,7 +28,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="common__area ">
             <div class="hide__address__area__book">
                 <div class="show__address__book m-width bg-black">
-                    <router-link to="/mail-compose">
+                    <router-link :to="lastActiveRoute">
                         <span><i class="fal fa-address-book"></i></span>Hide Address Book
                     </router-link>
                 </div>
@@ -108,6 +108,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import axios from 'axios';
 import * as Sentry from "@sentry/vue";
+import {mapGetters} from "vuex";
 export default {
     name: 'AddressBook',
     data(){
@@ -148,7 +149,9 @@ export default {
                     }
                 }
             };
-        }
+        },
+
+        ...mapGetters(['lastActiveRoute'])
     },
 
     methods:{

@@ -74,7 +74,10 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach((to) => {
+router.beforeEach((to, from) => {
+    //setting last active route in state
+    store.commit('UPDATE_LAST_ACTIVE_ROUTE', from)
+
     if(to.meta.requiresAuth && !store.state.appActiveUser.isAuthenticated){
         return {path: '/login'}
     }
