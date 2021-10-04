@@ -25,7 +25,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <template>
     <div>
-        <Header />
+        <Header :profile-pic-url="profilePicUrl"/>
         <Sidebar :labels="labels" />
         <MainArea />
 
@@ -67,7 +67,7 @@ import Sidebar from './Sidebar.vue';
 import MainArea from './MainArea.vue';
 import axios from 'axios';
 import * as Sentry from "@sentry/vue";
-//import { mapState } from 'vuex';
+import { mapState } from 'vuex';
 export default{
   components: {
     Header,
@@ -77,17 +77,17 @@ export default{
 
   data(){
     return {
-      labels: []
+      labels: [],
+      profilePicUrl: ''
     }
   },
   
   created(){
-    /*this.loadGoogleClient();
-    //Generate google auth code if it does not already exists
-    if(!this.$store.state.appActiveUser.hasGoogleAuth){
-      this.apiConnect();
-    } */
     this.fetchGoogleLabels(); 
+    //fetch profile pic url only if it is not available in the state
+    if(!this.appActiveUser.profilePicUrl){
+      this.getProfilePicUrl();
+    }
   },
 
   /*beforeMount(){
@@ -103,7 +103,7 @@ export default{
       }
     },
 
-    //...mapState(['googleCreds'])
+    ...mapState(['appActiveUser'])
   },
 
   /*watch:{
@@ -203,6 +203,19 @@ export default{
         .catch(err => {
           Sentry.captureException(err);
         });
+    },
+
+    getProfilePicUrl(){
+      axios.get('api/users/get-profile-pic')
+        .then(res => {
+          if(!res.data.error && res.data.data.length){
+            this.profilePicUrl = res.data.data;
+            this.$store.commit('UPDATE_USER', {profilePicUrl: this.profilePicUrl});
+          }
+        })
+        .catch(err => {
+          Sentry.captureException(err);
+        })
     }
   }
 }

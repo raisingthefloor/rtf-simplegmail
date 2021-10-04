@@ -31,6 +31,7 @@ const {validateToken} = require('./Middlewares/validateToken');
 module.exports = router => {
     //router.get('/connect', validateToken, gmailController.apiConnect);
     router.post('/googlecallback', gmailController.googleCallback);
+    router.get('/users/get-profile-pic', validateToken, gmailController.getProfilePic);
     router.get('/users/:id/messages/:type', validateToken, gmailController.getMails);
     router.get('/users/:id/message/:mid', validateToken, gmailController.getMessageDetails);
     router.get('/users/:id/contacts', validateToken, gmailController.getAllContacts);

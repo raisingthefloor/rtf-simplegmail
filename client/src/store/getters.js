@@ -23,13 +23,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 * Consumer Electronics Association Foundation
 */
 
-import {createStore} from 'vuex';
-import state from './state';
-import mutations from './mutations';
-import getters from './getters';
+export default{
+    labelName: state => {
+        return state.labelName;
+    },
 
-export const store = createStore({
-    state,
-    mutations,
-    getters
-});
+    lastActiveRoute: state => {
+        state.lastActiveRoute = localStorage.getItem('lastActiveRoute');
+        return ((!state.lastActiveRoute || state.lastActiveRoute == '/') ? 
+            state.lastActiveRoute = '/inbox' : state.lastActiveRoute);
+    }
+}

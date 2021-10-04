@@ -701,6 +701,40 @@ class GmailController{
 
         res.send(response);
     }
+    //gets profile pic for authenticated user
+    getProfilePic = async (req, res) => {
+        let response = {error: false, data: ''};
+        try{
+            let user = await User.findOne({_id: req.user.id});
+            if(user){
+                //getting oAuth2Client object
+                const oAuth2Client = this.getOAuth2Client();
+                //get user profile data from People API
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    let userProfile = await GoogleManager.getUserProfile(oAuth2Client);
+                    response.data = userProfile.photos ? userProfile.photos[0]?.url: null;   
+                }
+                
+                
+            }
+            else{
+                response.error = true;
+                response.data = "User not found";
+            }        
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            response.data = exp;
+            logger.error(`Error while fetching profie details : ${exp}`);
+            response.error = true; 
+        }
+
+        res.send(response);
+    }
 
     deleteAccount = async(req, res) => {
         let response = {error: false, message: ''};

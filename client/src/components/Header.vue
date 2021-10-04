@@ -108,7 +108,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <div class="header__profile">
                                 <h6>Google</h6>
                                 <div class="profile-thumb">
-                                    <img v-if="appActiveUser.profilePicUrl" :src="appActiveUser.profilePicUrl" 
+                                    <img v-if="profilePictureUrl" :src="profilePictureUrl" 
                                         :alt="appActiveUser.email" :title="appActiveUser.name" />
                                     <img v-else src="/assets/img/profile.jpg" :alt="appActiveUser.email" :title="appActiveUser.name"/>
 
@@ -144,8 +144,26 @@ import {mapState} from "vuex"
             };
         },
 
+        props:{
+            profilePicUrl:{
+                type: String,
+                required: true
+            }
+        },
+
         computed:{
-            ...mapState(['appActiveUser'])
+            ...mapState(['appActiveUser']),
+
+            profilePictureUrl(){
+                let url = "";
+                if(!this.profilePicUrl){
+                    url = this.appActiveUser.profilePicUrl;
+                }
+                else{
+                    url = this.profilePicUrl;
+                }
+                return url;
+            }
         },
         methods: {
             logoutHandler(){
