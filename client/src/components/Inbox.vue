@@ -32,10 +32,13 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         <h5>email in <b>INBOX</b></h5>
                     </div>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <button v-for="(message, index) in messages" :key="index" @click="getMessageDetails(message.id)"
-                            :class="['nav-link']" id="nav-home-tab" data-bs-toggle="tab"
+                        <button v-for="(message, index) in messages" :key="index" @click="getMessageDetails(message.id);setCurrentIndex(index)"
+                            :class="['nav-link']" :id="`nav-home-tab-${index}`" data-bs-toggle="tab"
                             :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
-                            :aria-selected="index == 0 ? 'true' : 'false'">
+                            :aria-selected="index == 0 ? 'true' : 'false'"
+                            :ref="`inbox_msg_${index}`"
+                            @keydown="onKeyDown"
+                        >
                             <div class="nav__btn__content">
                                 <div class="nav__btn__top">
                                     <p>From: {{$filters.strip_html(message.payload.headers.find(header => header.name.toLowerCase() == "from").value)}}</p>
@@ -159,8 +162,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 import * as Sentry from "@sentry/vue";
 import moment from 'moment';
 import axios from 'axios';
-/*import { mapState } from 'vuex';
-import {Buffer} from 'buffer/';*/
+import { mapState } from 'vuex';
+/*import {Buffer} from 'buffer/';*/
 
 export default {
     data(){
@@ -169,7 +172,8 @@ export default {
             messageDetails: null,
             nextPageToken: null,
             moment: moment,
-            loading: false
+            loading: false,
+            currentIndex: 0
         }
     },
 
@@ -177,6 +181,10 @@ export default {
         this.getInboxMessages();
         //this.getThreads();
         //this.getThreadMessages();
+    },
+
+    computed:{
+        ...mapState(['keyCodes']),
     },
 
     /*mounted(){
@@ -337,6 +345,46 @@ export default {
             var blob = new Blob(byteArrays, {type: contentType})
             let urlBlob = URL.createObjectURL(blob)
             return urlBlob
+        },
+
+        setCurrentIndex(index){
+            this.currentIndex = index;
+        },
+
+        onKeyDown(e){
+            const {arrows} = this.keyCodes;
+            if(e.keyCode == arrows.down){
+                this.traverseMsgListDown();
+            }
+
+            else if(e.keyCode == arrows.up){
+                this.traverseMsgListUp();
+            }
+
+            else if(e.keyCode == arrows.left){
+                this.relayFocusToSidebar();
+            }
+        },
+
+        traverseMsgListDown(){
+            this.currentIndex = (this.currentIndex + 1 ) % this.messages.length;
+            this.focusElement();
+        },
+
+        traverseMsgListUp(){
+            this.currentIndex = (this.currentIndex -1 + this.messages.length) % this.messages.length;
+            this.focusElement();
+        },
+
+        focusElement(){
+            let el = this.$refs[`inbox_msg_${this.currentIndex}`];
+            el.focus();
+        },
+
+        relayFocusToSidebar(){
+            //set the focus to the first label
+            let el = window.$("#lbl_id_0").find('a');
+            el.focus();
         }
         /*getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({

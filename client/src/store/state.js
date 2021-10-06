@@ -60,6 +60,31 @@ export default{
         messageID: null,
         replyBody: null
     },
+    //Key codes values for control or functional keys
+    keyCodes:{
+        backspace: 8,
+        tab: 9,
+        enter: 13,
+        shift: 16,
+        ctrl: 17,
+        alt: 18,
+        'pause/break': 19,
+        'caps-lock': 20,
+        escape: 27,
+        space: 32,
+        'page-up': 33,
+        'page-down': 34,
+        end: 35,
+        home: 36,
+        arrows:{
+            left: 37,
+            up: 38,
+            right: 39,
+            down: 40,
+        },
+        insert: 45,
+        delete: 46
+    },
     labelName: '',
     lastActiveRoute: ''
 }

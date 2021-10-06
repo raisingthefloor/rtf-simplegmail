@@ -33,15 +33,35 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>TO:</p>
                                     <div class="mail__write__input__field dropdown-container">
-                                        <input name="to" id="to" v-model="mail.to" type="text"  @keyup="contactSearch"
-                                          @keyup.enter="hideSearchResult('to')" 
-                                          @keyup.tab="hideSearchResult('to')" 
-                                          @keyup.esc="hideSearchResult('to')"
-                                          @focus="setLastFocus"
+
+                                        <!--Selected Recipients-->
+                                        <div style="display:inline-block" v-if="mailInputArray.to.length">
+                                            <span v-for="(contact,index) in mailInputArray.to" :key="index">
+                                                <span @click="removeFromMailInputArray('to', contact.etag)" v-if="contact.names" class="cursor-pointer badge rounded-pill bg-secondary"
+                                                title="Click to Remove"
+                                                >
+                                                    {{contact.names[0]?.displayName}} x
+                                                </span>
+
+                                                <span v-else-if="contact.emailAddresses" @click="removeFromMailInputArray('to', contact.etag)" class="badge rounded-pill bg-secondary cursor-pointer" title="Click to Remove"
+                                                >
+                                                    {{contact.emailAddresses[0]?.value}} x
+                                                </span>&nbsp;
+                                            </span>
+                                        </div>
+
+                                        <!--To input field-->
+                                        <input name="to" id="to" v-model="mailInputs.to" type="text" 
+                                            @keyup="onKeyUp"
+                                            @keydown="onKeyDown" 
+                                            @focus="setLastFocus"
                                         />
 
+                                        <!--Contact Result dropdown for to field-->
                                         <div v-if="searchedContacts.length" class="dropdown-content">
-                                            <div @click="contactSelected($event, 'to', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
+                                            <div @click="contactSelected($event, 'to', index)" 
+                                            :class="['user-profile', index == currentIndex ? 'selected' : '']" v-for="(contact, index) in searchedContacts" :key="contact.etag" :ref="`to_${index}`"
+                                            >
                                                 <div class="user-avatar">
                                                     <a href="javascript:void(0)"> 
                                                         <img :src="contact.photos[0]?.url" alt="profile">
@@ -65,15 +85,29 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>Send a copy to:</p>
                                     <div class="mail__write__input__field dropdown-container">
-                                        <input name="cc" id="cc" v-model="mail.cc" type="text" @keyup="contactSearch" 
-                                            @keyup.enter="hideSearchResult('cc')" 
-                                            @keyup.tab="hideSearchResult('cc')" 
-                                            @keyup.esc="hideSearchResult('cc')" 
+                                        <!--Selected CC Recipients-->
+                                        <div style="display:inline-block" v-if="mailInputArray.cc.length">
+                                            <span v-for="(contact,index) in mailInputArray.cc" :key="index">
+                                                <span @click="removeFromMailInputArray('cc', contact.etag)" v-if="contact.names" class="cursor-pointer badge rounded-pill bg-secondary">
+                                                    {{contact.names[0]?.displayName}} x
+                                                </span>
+
+                                                <span v-else-if="contact.emailAddresses" @click="removeFromMailInputArray('cc', contact.etag)" class="badge rounded-pill bg-secondary cursor-pointer">
+                                                    {{contact.emailAddresses[0]?.value}} x
+                                                </span>&nbsp;
+                                            </span>
+                                        </div>
+
+                                        <!--CC input field-->
+                                        <input name="cc" id="cc" v-model="mailInputs.cc" type="text" 
+                                            @keyup="onKeyUp" 
+                                            @keydown="onKeyDown" 
                                             @focus="setLastFocus"
                                         />
 
+                                        <!--Contact Result dropdown for to field-->
                                         <div v-if="searchedContacts.length" class="dropdown-content">
-                                            <div @click="contactSelected($event, 'cc', contact.emailAddresses[0].value)" class="user-profile" v-for="contact in searchedContacts" :key="contact.etag">
+                                            <div @click="contactSelected($event, 'cc', index)" :class="['user-profile', index == currentIndex ? 'selected' : '']" v-for="(contact,index) in searchedContacts" :key="contact.etag">
                                                 <div class="user-avatar">
                                                     <a href="javascript:void(0)"> 
                                                         <img :src="contact.photos[0]?.url" alt="profile">
@@ -151,14 +185,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             </div>
                             <div class="mail__bottom__actions">
                                 <div class="mail__bottom__action">
-                                    <span><img src="/assets/img/format.png" alt=""></span>
+                                    <a href="#"><span><img src="/assets/img/format.png" alt=""></span></a>
                                 </div>
                                 <div class="mail__bottom__action attach--file" title="Add Attachments">
-                                    <input type="file" multiple @change="attachmentSelected"/>
-                                    <span><img src="/assets/img/attach.png" alt="file_attachments"></span>
+                                    <input type="file" multiple @change="attachmentSelected" tabindex="-1" />
+                                    <a href="#"><span><img src="/assets/img/attach.png" alt="file_attachments"></span></a>
                                 </div>
                                 <div class="mail__bottom__action">
-                                    <span><img src="/assets/img/emoji.png" alt=""></span>
+                                    <a href="#"><span><img src="/assets/img/emoji.png" alt=""></span></a>
                                 </div>
                             </div>
                             <div class="mail__bottom__btns">
@@ -202,6 +236,7 @@ import moment from 'moment';
 import axios from 'axios';
 import Quill from 'quill';
 import * as Sentry from "@sentry/vue";
+import {mapState} from "vuex";
 
 export default {
     name: 'MailComposer',
@@ -221,10 +256,19 @@ export default {
                 attachments: []
                 //date: Date.now()
             },
+            mailInputs:{
+                to: '',
+                cc: ''
+            },
+            mailInputArray:{
+                to: [],
+                cc: []
+            },
             otherContacts: [],
             searchedContacts: [],
             inputIds: ['to', 'cc'],
-            lastFocused: null
+            lastFocused: null,
+            currentIndex: 0
         }
     },
 
@@ -243,11 +287,13 @@ export default {
 
     computed:{
         sendMailDisabled(){
-            if(this.mail.to && this.mail.from && this.mail.subject && this.mail.body){
+            if(this.mailInputArray.to.length && this.mail.from && this.mail.subject && this.mail.body){
                 return false;
             }
             return true;
         },
+
+        ...mapState(['keyCodes']),
 
         /*searchedContacts(){
             return this.otherContacts.filter(contact => {
@@ -262,7 +308,10 @@ export default {
 
     methods:{
         sendMail(saveAsDraft = false){
-            let headers = {'Content-Type':'multipart/formdata'}, payload = this.mail;
+            //set mail object
+            console.log(saveAsDraft);
+            this.setMailPayload();
+            /*let headers = {'Content-Type':'multipart/formdata'}, payload = this.mail;
             //converts the mail object into form data
             payload = this.parseMailObject();
             //saving the message as draft instead of sending
@@ -288,7 +337,15 @@ export default {
             })
             .catch(err => {
                 Sentry.captureException(err);
-            });
+            });*/
+        },
+
+        setMailPayload(){
+            let mailToArray = this.mailInputArray.to.map(mailContact => mailContact.emailAddresses[0].value);
+            let mailCcArray = this.mailInputArray.cc.map(mailContact => mailContact.emailAddresses[0].value);
+
+            this.mail.to = mailToArray.join(',');
+            this.mail.cc = mailCcArray.join(',');
         },
 
         prepareMailObject(){
@@ -317,8 +374,9 @@ export default {
 
         contactSearch(e){
             this.searchedContacts = this.otherContacts;
+            this.currentIndex = 0;
             let resultDropdown = document.querySelector(`#${e.target.id} + .dropdown-content`);
-            if(this.mail[e.target.id]){
+            if(this.mailInputs[e.target.id]){
                 resultDropdown.style.display = "block";
             }
             else{
@@ -326,15 +384,19 @@ export default {
             }
             
             this.searchedContacts = this.searchedContacts.filter(contact => {
-                return (contact.names[0].displayName.toLowerCase().includes(this.mail[e.target.id].toLowerCase())
-                    || contact.emailAddresses[0].value.toLowerCase().includes(this.mail[e.target.id].toLowerCase()));
+                return (contact.emailAddresses[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id].toLowerCase()) || contact.names ? contact.names[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id].toLowerCase()) : false);
             });
         },
 
-        contactSelected(e, mailProp, email){
+        contactSelected(e, mailProp, itemIndex){
             let dropdown = document.querySelector(`#${mailProp} + .dropdown-content`);
             dropdown.style.display = "none";
-            this.mail[mailProp] = email;
+            //this.mail[mailProp] = email;
+            this.mailInputs[mailProp] = this.searchedContacts[itemIndex].emailAddresses[0]?.value;
+            this.mailInputArray[mailProp].push(this.searchedContacts[itemIndex]);
+            this.mailInputs[mailProp] = '';
+            //resetting the focus
+            window.$(this.lastFocused).focus();
         },
 
         hideSearchResult(mailProp){
@@ -362,9 +424,26 @@ export default {
 
                 ['clean']                                         // remove formatting button
             ];
+
+            //Keyboard bindings
+            const keyboardBindings = {
+                tab: {
+                    key: 9,
+                    handler: function() {
+                      //moving focus to 
+                      window.$(".compose-editor + div").find("#dropdownMenuLink .far fa-ellipsis-v").focus();
+                      return true;
+                    }
+                }
+            };
+
+            //Creating a quill intsance
             const quill = new Quill('#editor', {
                 modules:{
-                    toolbar: toolbarOptions
+                    toolbar: toolbarOptions,
+                    keyboard:{
+                        bindings: keyboardBindings
+                    }
                 },
                 theme: 'snow',
                 scrollingContainer: '#editor'
@@ -440,26 +519,117 @@ export default {
         },
 
         pushToActiveFields(contact){
-            let emailAddress = contact.emailAddresses ? contact.emailAddresses[0].value : '';  
             //targetElement key will contain element id that is equal to mail object keys
             let targetElementKey = '';
+
             if(this.lastFocused){
                targetElementKey = this.lastFocused.context.id; 
             }
             else{
                 targetElementKey = 'to';
             }
-            if(this.mail[targetElementKey]){
-                let mailArray = this.mail[targetElementKey].split(',')
-                mailArray = mailArray.map(mail => mail.trim())
-                if(!mailArray.includes(emailAddress)){
-                    this.mail[targetElementKey] += `, ${emailAddress}`;
+            if(this.mailInputArray[targetElementKey].length){
+                let etagsArray = this.mailInputArray[targetElementKey].map(contact => contact.etag);
+                if(!etagsArray.includes(contact.etag)){
+                    this.mailInputArray[targetElementKey].push(contact);
                 }
-                
             }
             else{
-                this.mail[targetElementKey] = emailAddress;
+                this.mailInputArray[targetElementKey].push(contact);
             }
+            
+            this.resetFocusToLast();
+        },
+
+        resetFocusToLast(){
+            //resetting focus to last element
+            window.$(this.lastFocused).focus();
+        },
+
+        onKeyUp(e){
+            //e.preventDefault();
+            const {escape, enter, arrows, backspace} = this.keyCodes;
+            //Close the search Result if escape or enter is pressed
+            if(e.keyCode == enter || e.keyCode == escape){
+                //while pressing enter if there are no search results
+                if(!this.searchedContacts.length){
+                    //validate the input value and accept it if okay
+                    this.validateMailandAccept(e.target.id);
+                }
+
+                this.hideSearchResult(e.target.id);
+
+                //on pressing enter populate the field
+                this.populateFieldViaKeyboard(e.target.id);            
+            }
+            //down arrow key is pressed
+            else if(e.keyCode == arrows.down){
+                //traverse and select from search results
+                this.traverseContactsDown();
+            }
+            //up arrow key is pressed
+            else if(e.keyCode == arrows.up){
+                this.traverseContactsUp();
+            }
+            //backspace key is pressed
+            else if(e.keyCode == backspace){
+                /*if(!this.mailInputs[e.target.id]){
+                    this.hideSearchResult(e.target.id);
+                    this.mailInputArray[e.target.id] = this.mailInputArray[e.target.id].splice(this.mailInputArray[e.target.id].length - 1, 1);
+                }*/
+            }
+            else{
+                //Search contacts based on char input
+                this.contactSearch(e);    
+            }
+        },
+
+        onKeyDown(e){
+            //e.preventDefault();
+            const {tab} = this.keyCodes;
+            //Close the search Result if tab is pressed
+            if(e.keyCode == tab){
+                this.hideSearchResult(e.target.id);
+            }
+        },
+
+        initCurrentIndex(){
+            this.currentIndex = -1;
+        },
+
+        traverseContactsDown(){
+            this.currentIndex = (this.currentIndex + 1) % this.searchedContacts.length;
+        },
+
+        traverseContactsUp(){
+            this.currentIndex = (this.currentIndex - 1 + this.searchedContacts.length) % this.searchedContacts.length;
+        },
+
+        populateFieldViaKeyboard(targetElementKey){
+            this.mailInputArray[targetElementKey].push(this.searchedContacts[this.currentIndex]);
+            this.mailInputs[targetElementKey] = '';
+        },
+
+        removeFromMailInputArray(key, etag){
+            let targetIdx = this.mailInputArray[key].findIndex(contact => contact.etag == etag);
+            if(targetIdx != -1){
+                this.mailInputArray[key].splice(targetIdx, 1); 
+            }
+
+            this.resetFocusToLast();
+        },
+
+        validateMailandAccept(targetElementKey){
+            if(this.isEmail(this.mailInputs[targetElementKey])){
+                //push the value to mailInputarray
+                this.mailInputArray[targetElementKey].push(this.mailInputs[targetElementKey]);
+                this.mailInputs[targetElementKey] = '';
+            }
+        },
+
+        isEmail(value){
+            let regex = /^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/g;
+            return regex.test(value);
         }
     }
 }
@@ -511,7 +681,7 @@ export default {
         cursor: pointer;
         padding: 10px 20px;
     }
-    .user-profile:hover{
+    .user-profile:hover, .user-profile.selected{
         background: #e4d8d8;
     }
     
@@ -555,7 +725,7 @@ export default {
         overflow: auto;
     }
     
-    .mail__write__input__field input{
-        width:500px;
+    .mail__write__input__field input[name='to'], .mail__write__input__field input[name='cc']{
+        width:250px;
     }
 </style>
