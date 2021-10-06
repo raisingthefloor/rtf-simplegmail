@@ -25,7 +25,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <template>
     <div>
-        <!--------- Menu Bar area start --------->
+        <!-- Menu Bar area start -->
     <div class="menu__bar">
         <div class="write__email__btn">
             <router-link to="/mail-compose" class="common__btn">
@@ -65,8 +65,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </router-link>
                     </li>
                 </ul> -->
-                <ul>
-                    <li v-for="label in filteredLabels" :key="label.id">
+                <ul @keydown="onLabelsKeyDown">
+                    <li v-for="(label,index) in filteredLabels" :id="`lbl_id_${index}`" :key="label.id" :ref="`label_${index}`" @click="currentIndex = index">
                         <router-link :to="`/${label.route}`" :class="$route.path == '/'+label.route ? 'active' : ''">
                             <span>
                                 <img v-if="label.imgSrc" :src="label.imgSrc" :alt="label.id">
@@ -86,16 +86,16 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
             <a href=""><i class="fas fa-phone fa-rotate-90"></i></a>
         </div>
     </div>
-    <!--------- Menu Bar area end --------->
+    <!--Menu Bar area end -->
     </div>
 </template>
 
 <script>
-//import { mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 export default {
     data(){
         return{
-
+            currentIndex: 0
         };
     },
 
@@ -128,7 +128,7 @@ export default {
                         imgSrc += "trash-1.png";
                     }
                     else if(label.name == "SPAM"){
-                        route = "/spam";
+                        route = "spam";
                         text = "? Junk mail ?";
                         imgSrc = null;
                     }
@@ -149,10 +149,71 @@ export default {
             }
         },
 
-        /*...mapGetters(['isGoogleSignedIn'])*/
+        ...mapState(['keyCodes'])
     },
 
-    methods: {}
+    methods: {
+        onLabelsKeyDown(e){
+            const {arrows} = this.keyCodes;
+            switch(e.keyCode){
+
+                case arrows.right:
+                    this.rightArrowClicked();
+                    break;
+
+                case arrows.up:
+                    this.traverseLabelsUp();
+                    break;
+                
+                case arrows.down:
+                    this.traverseLabelsDown();
+                    break;
+
+                default:
+                    break;
+            }
+        },
+
+        rightArrowClicked(){
+            //check current route
+            let {path} = this.$route;
+            if(path == "/mail-compose"){
+                //relay focus to MailComposer Component
+                this.currentIndex = 0;
+                this.relayFocusToMailComposer();
+            }
+            else if(path == '/inbox'){
+                this.currentIndex = 0;
+                //relay focus to Inbox Component
+                this.relayFocusToInbox();
+            }
+        },
+
+        traverseLabelsDown(){
+            //alert("down");
+            this.currentIndex = (this.currentIndex + 1) % this.filteredLabels.length;
+            let li = window.$(this.$refs['label_'+this.currentIndex]);
+            let element = li.find('a');
+            element.focus();
+        },
+
+        traverseLabelsUp(){
+            this.currentIndex = (this.currentIndex - 1 + this.filteredLabels.length) % this.filteredLabels.length;
+            let li = window.$(this.$refs['label_'+this.currentIndex]);
+            let element = li.find('a');
+            element.focus();
+        },
+
+        relayFocusToMailComposer(){
+            //Set focus to first input element i.e to field
+            window.$("#to").focus();
+        },
+
+        relayFocusToInbox(){
+             //Set focus to message from the list
+             window.$("#nav-home-tab-0").focus();
+        }
+    }
 }
 </script>
 
