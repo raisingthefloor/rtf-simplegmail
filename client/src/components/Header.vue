@@ -24,15 +24,18 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 -->
 <template>
     <div>
-        <!--------- Header area start --------->
+        <!-- Header area start -->
         <div class="header__area">
         <div class="container">
             <div class="header__left">
                 <div class="menu__open">
                     <i class="far fa-bars"></i>
                 </div>
-                <div class="logo__main">
-                    <a href=""><img src="/assets/img/logo-main.png" alt=""></a>
+                <div class="logo__main cursor-pointer">
+                    <a href="javascript:void(0)">
+                        <img src="/assets/img/logo-main.png" alt="EasyMail">
+                    </a>
+                    <span class="logo__title">EasyMail</span>
                 </div>
                 <div class="header__search">
                     <button type="button" class="search__button hd-btn">
@@ -131,7 +134,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
     <div class="offcanvas-overlay">
 
     </div>
-    <!--------- Header area end --------->
+    <!-- Header area end -->
     </div>
 </template>
 
@@ -165,6 +168,7 @@ import {mapState} from "vuex"
                 return url;
             }
         },
+
         methods: {
             logoutHandler(){
                 this.$store.commit('LOGOUT_USER');
@@ -179,3 +183,17 @@ import {mapState} from "vuex"
         }
     }
 </script>
+
+<style scoped>
+    .logo__main img {
+        border-radius: 50px;
+        max-height: 55px;
+        max-width: 55px;
+        object-fit:contan;
+    }
+    .logo__title{
+        color: #4e6071;
+        margin-left:8px;
+        font-size: 20px;
+    }
+</style>
