@@ -26,67 +26,67 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <!-- Menu Bar area start -->
-    <div class="menu__bar">
-        <div class="write__email__btn">
-            <router-link to="/mail-compose" class="common__btn">
-                <span><img src="/assets/img/pen.png" alt=""></span>Write <br> New email
-            </router-link>
-        </div>
-        <div class="main__menu__wrapper">
-            <div class="main_menu">
-                <!-- <ul>
-                    <li>
-                        <router-link to="/drafts">
-                            <span><img src="/assets/img/pencil.png" alt=""></span>DRAFTS Not Sent
-                        </router-link>
-                    </li>
-                    <li>
-                        <router-link to="/inbox" :class="$route.name == 'Inbox' ? 'active' : ''">
-                            <span><img src="/assets/img/inbox.png" alt=""></span>Inbox 
-                            <div class="new__mail new__notifications">2 new</div>
-                        </router-link>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <div class="ml-2"></div> ? Junk mail ?
-                        </a>
-                    </li>
-                    <li>
-                        <router-link to="/sent">
-                            <span><img src="/assets/img/folder.png" alt=""></span>Email I SENT
-                        </router-link>
-                    </li>
-                    <li>
-                        <a><span><img src="/assets/img/folder.png" alt=""></span>SAVED email</a>
-                    </li>
-                    <li>
-                        <router-link to="/trash">
-                            <span><img src="/assets/img/trash-1.png" alt=""></span> email in TRASH
-                        </router-link>
-                    </li>
-                </ul> -->
-                <ul @keydown="onLabelsKeyDown">
-                    <li v-for="(label,index) in filteredLabels" :id="`lbl_id_${index}`" :key="label.id" :ref="`label_${index}`" @click="currentIndex = index">
-                        <router-link :to="`/${label.route}`" :class="$route.path == '/'+label.route ? 'active' : ''">
-                            <span>
-                                <img v-if="label.imgSrc" :src="label.imgSrc" :alt="label.id">
-                            </span> 
-                            {{label.text}}
-                        </router-link>
-                    </li>
-                </ul>
+        <div class="menu__bar">
+            <div class="write__email__btn">
+                <router-link to="/mail-compose" class="common__btn">
+                    <span><img src="/assets/img/pen.png" alt=""></span>Write <br> New email
+                </router-link>
+            </div>
+            <div class="main__menu__wrapper">
+                <div class="main_menu">
+                    <!-- <ul>
+                        <li>
+                            <router-link to="/drafts">
+                                <span><img src="/assets/img/pencil.png" alt=""></span>DRAFTS Not Sent
+                            </router-link>
+                        </li>
+                        <li>
+                            <router-link to="/inbox" :class="$route.name == 'Inbox' ? 'active' : ''">
+                                <span><img src="/assets/img/inbox.png" alt=""></span>Inbox 
+                                <div class="new__mail new__notifications">2 new</div>
+                            </router-link>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <div class="ml-2"></div> ? Junk mail ?
+                            </a>
+                        </li>
+                        <li>
+                            <router-link to="/sent">
+                                <span><img src="/assets/img/folder.png" alt=""></span>Email I SENT
+                            </router-link>
+                        </li>
+                        <li>
+                            <a><span><img src="/assets/img/folder.png" alt=""></span>SAVED email</a>
+                        </li>
+                        <li>
+                            <router-link to="/trash">
+                                <span><img src="/assets/img/trash-1.png" alt=""></span> email in TRASH
+                            </router-link>
+                        </li>
+                    </ul> -->
+                    <ul @keydown="onLabelsKeyDown">
+                        <li v-for="(label,index) in filteredLabels" :id="`lbl_id_${index}`" :key="label.id" :ref="`label_${index}`" @click="currentIndex = index" class="label-item">
+                            <router-link :to="`/${label.route}`" :class="$route.path == '/'+label.route ? 'active' : ''">
+                                <span>
+                                    <img v-if="label.imgSrc" :src="label.imgSrc" :alt="label.id">
+                                </span> 
+                                {{label.text}}
+                            </router-link>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="add__new__folder text-center">
+                <a href="#" class="common__btn" data-bs-toggle="modal" data-bs-target="#exampleModal">Add New Folder</a>
+            </div>
+            <div class="menu__bottom">
+                <a href=""><i class="fas fa-user"></i></a>
+                <a href="" class="active"><img src="/assets/img/google-hangouts-logo.png" alt=""></a>
+                <a href=""><i class="fas fa-phone fa-rotate-90"></i></a>
             </div>
         </div>
-        <div class="add__new__folder text-center">
-            <a href="#" class="common__btn" data-bs-toggle="modal" data-bs-target="#exampleModal">Add New Folder</a>
-        </div>
-        <div class="menu__bottom">
-            <a href=""><i class="fas fa-user"></i></a>
-            <a href="" class="active"><img src="/assets/img/google-hangouts-logo.png" alt=""></a>
-            <a href=""><i class="fas fa-phone fa-rotate-90"></i></a>
-        </div>
-    </div>
-    <!--Menu Bar area end -->
+        <!--Menu Bar area end -->
     </div>
 </template>
 
@@ -95,6 +95,7 @@ import { mapState } from 'vuex'
 export default {
     data(){
         return{
+            allowedSystemLabels:['draft', 'inbox', 'spam', 'sent', 'trash'],
             currentIndex: 0
         };
     },
@@ -110,9 +111,10 @@ export default {
         filteredLabels(){
             if(this.labels.length){
                 return this.labels.filter(label => {
-                    if(label.name == "TRASH" || label.name == "SPAM") return true;
-                    else if(label.name == "STARRED" || label.name == "UNREAD") return false;
-                    return label.labelListVisibility != "labelHide"; 
+                    if((label.type == "system" && this.allowedSystemLabels.includes(label.name.toLowerCase())) || label.type == "user"){
+                        return true;
+                    } 
+                    return false; 
                 }).map(label => {
                     let text = "", route = label.name.toLowerCase(), imgSrc="/assets/img/";
                     if(label.name == "SENT"){
@@ -135,7 +137,7 @@ export default {
                     else if(label.name == "DRAFT"){
                         imgSrc += "pencil.png";
                         route += 's';
-                        text = "DRAFTS Not Sent";
+                        text = "DRAFTS - Not Sent";
                     }
                     else{
                         imgSrc += "folder.png";
@@ -231,5 +233,12 @@ export default {
       border-radius:5px;
       -webkit-box-shadow: inset 0 0 6px white; 
       box-shadow: inset 0 0 6px white;
+    }
+    .label-item{
+        word-break: break-word;
+    }
+    /*Removing unwanted margin-bottom*/
+    .main_menu ul{
+        margin-bottom: unset;
     }
 </style>
