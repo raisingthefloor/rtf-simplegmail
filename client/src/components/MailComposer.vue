@@ -559,7 +559,7 @@ export default {
                 this.hideSearchResult(e.target.id);
 
                 //on pressing enter populate the field
-                this.populateFieldViaKeyboard(e.target.id);            
+                if(e.keyCode == enter) this.populateFieldViaKeyboard(e.target.id);            
             }
             //down arrow key is pressed
             else if(e.keyCode == arrows.down){
@@ -572,10 +572,10 @@ export default {
             }
             //backspace key is pressed
             else if(e.keyCode == backspace){
-                /*if(!this.mailInputs[e.target.id]){
+                if(!this.mailInputs[e.target.id]){
                     this.hideSearchResult(e.target.id);
-                    this.mailInputArray[e.target.id] = this.mailInputArray[e.target.id].splice(this.mailInputArray[e.target.id].length - 1, 1);
-                }*/
+                    /*this.mailInputArray[e.target.id] = this.mailInputArray[e.target.id].splice(this.mailInputArray[e.target.id].length - 1, 1);*/
+                }
             }
             else{
                 //Search contacts based on char input
