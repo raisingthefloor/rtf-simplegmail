@@ -309,9 +309,8 @@ export default {
     methods:{
         sendMail(saveAsDraft = false){
             //set mail object
-            console.log(saveAsDraft);
             this.setMailPayload();
-            /*let headers = {'Content-Type':'multipart/formdata'}, payload = this.mail;
+            let headers = {'Content-Type':'multipart/formdata'}, payload = this.mail;
             //converts the mail object into form data
             payload = this.parseMailObject();
             //saving the message as draft instead of sending
@@ -337,7 +336,7 @@ export default {
             })
             .catch(err => {
                 Sentry.captureException(err);
-            });*/
+            });
         },
 
         setMailPayload(){
