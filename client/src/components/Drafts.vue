@@ -51,7 +51,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <div class="common__mail__wrapper">
                                 <div class="mail__details__blk position-relative">
                                     <div class="mail__details__left">
-                                        <p><b> TO:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "to").value ?? ''}}</p>
+                                        <p><b> TO:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "to")?.value ?? ''}}</p>
                                         <p><b>From: </b>
                                             {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
                                         </p>
