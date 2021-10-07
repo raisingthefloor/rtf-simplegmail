@@ -248,7 +248,10 @@ class GmailController{
                     let {messages, nextPageToken} = responseObj;
                     let allMails = messages;
                     response.nextPageToken = nextPageToken;
-                    if(req.params.id){
+
+                    //if param type is inbox
+                    if(req.params.type == "inbox"){
+
                         //fetch message metadata for allMails
                         for(let mail of allMails){
                             let mail_meta = await GoogleManager.getSingleMessageMetadata(oAuth2Client, mail.id);
@@ -258,7 +261,7 @@ class GmailController{
                     else{
                         for (let mail of allMails)
                         {
-                            let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail);
+                            let mail_detail = await GoogleManager.getSingleProcessedMessageDetails(oAuth2Client, mail.id);
                             let messageId = mail_detail.payload.headers.find(obj => obj.name == "Message-ID")
                             
                             if(mail_detail.decoded_attachments && mail_detail.decoded_attachments.length)

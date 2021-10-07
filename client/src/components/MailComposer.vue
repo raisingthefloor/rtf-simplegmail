@@ -35,12 +35,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <div class="mail__write__input__field dropdown-container">
 
                                         <!--Selected Recipients-->
-                                        <div style="display:inline-block" v-if="mailInputArray.to.length">
+                                        <div style="display:inline" v-if="mailInputArray.to.length">
                                             <span v-for="(contact,index) in mailInputArray.to" :key="index">
                                                 <span @click="removeFromMailInputArray('to', contact.etag)" v-if="contact.names" class="cursor-pointer badge rounded-pill bg-secondary"
                                                 title="Click to Remove"
                                                 >
-                                                    {{contact.names[0]?.displayName}} x
+                                                    {{contact.names[0]?.displayName}} &lt;{{contact.emailAddresses[0]?.value}}&gt; x
                                                 </span>
 
                                                 <span v-else-if="contact.emailAddresses" @click="removeFromMailInputArray('to', contact.etag)" class="badge rounded-pill bg-secondary cursor-pointer" title="Click to Remove"
@@ -86,10 +86,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <p>Send a copy to:</p>
                                     <div class="mail__write__input__field dropdown-container">
                                         <!--Selected CC Recipients-->
-                                        <div style="display:inline-block" v-if="mailInputArray.cc.length">
+                                        <div style="display:inline" v-if="mailInputArray.cc.length">
                                             <span v-for="(contact,index) in mailInputArray.cc" :key="index">
-                                                <span @click="removeFromMailInputArray('cc', contact.etag)" v-if="contact.names" class="cursor-pointer badge rounded-pill bg-secondary">
-                                                    {{contact.names[0]?.displayName}} x
+                                                <span @click="removeFromMailInputArray('cc', contact.etag)" v-if="contact.names" class="cursor-pointer badge rounded-pill bg-secondary"
+                                                >
+                                                    {{contact.names[0]?.displayName}} &lt;{{contact.emailAddresses[0]?.value}}&gt; x
                                                 </span>
 
                                                 <span v-else-if="contact.emailAddresses" @click="removeFromMailInputArray('cc', contact.etag)" class="badge rounded-pill bg-secondary cursor-pointer">
@@ -246,11 +247,11 @@ export default {
             moment: moment,
             mail:{
                 to: null,
-                from: this.$store.state.user.name + ' <'+this.$store.state.user.email+'>',
+                from: this.$store.state.appActiveUser.name + ' <'+this.$store.state.appActiveUser.email+'>',
                 cc: null,
-                subject: null,
-                body: null,
-                replyBody: null,
+                subject: '',
+                body: '',
+                replyBody: '',
                 replyTo: null,
                 references: null,
                 attachments: []
@@ -287,7 +288,7 @@ export default {
 
     computed:{
         sendMailDisabled(){
-            if(this.mailInputArray.to.length && this.mail.from && this.mail.subject && this.mail.body){
+            if(this.mailInputArray.to.length && this.mail.from){
                 return false;
             }
             return true;
@@ -310,6 +311,10 @@ export default {
         sendMail(saveAsDraft = false){
             //set mail object
             this.setMailPayload();
+
+            //Display a warning message if Subject and Body is not present
+            const isMailOk = this.promptIfNotSubjectAndBody(saveAsDraft);
+
             let headers = {'Content-Type':'multipart/formdata'}, payload = this.mail;
             //converts the mail object into form data
             payload = this.parseMailObject();
@@ -318,25 +323,38 @@ export default {
                 payload.append('saveAsDraft', true);
             }
 
-            axios.post('api/users/me/messages/send', payload, {headers})
-            .then(res => {
-                if(!res.data.error && res.data.data.id){
-                    if(saveAsDraft){
-                        alert("Message Saved as Draft!");
-                    }
-                    else{
-                        alert("Message sent successfully!");
+            if(isMailOk){
+                axios.post('api/users/me/messages/send', payload, {headers})
+                .then(res => {
+                    if(!res.data.error && res.data.data.id){
+                        if(saveAsDraft){
+                            alert("Message Saved as Draft!");
+                        }
+                        else{
+                            alert("Message sent successfully!");
+                        }
+
+                        //resetting mail object
+                        this.resetMail();
                     }
 
-                    //resetting mail object
-                    this.resetMail();
-                }
+                    
+                })
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
+            }
+            
+        },
 
-                
-            })
-            .catch(err => {
-                Sentry.captureException(err);
-            });
+        promptIfNotSubjectAndBody(saveAsDraft){
+            let action = "Send";
+            action = saveAsDraft ? "Save" : action;
+
+            if(!this.mail.subject && !this.mail.body){
+                return confirm(`${action} this message without a subject or text in the body?`);
+            }
+            return true;
         },
 
         setMailPayload(){
@@ -493,19 +511,24 @@ export default {
         resetMail(){
             this.mail = {
                 to: null,
-                from: this.$store.state.user.email,
+                from: this.$store.state.appActiveUser.name + ' <'+this.$store.state.appActiveUser.email+'>',
                 cc: null,
-                subject: null,
-                body: null,
-                replyBody: null,
+                subject: '',
+                body: '',
+                replyBody: '',
                 replyTo: null,
                 references: null,
                 attachments: []
-                //date: Date.now()
-            }
+            };
             //clearing the contents of Quill Editor
             let element = document.getElementsByClassName("ql-editor");
             element[0].innerHTML = "";
+
+            //Reinitializing mailInput array
+            this.mailInputArray = {
+                to: [],
+                cc: []
+            };
 
             //hiding the search result for to or cc
             if(window.$(`#${this.lastFocused.context.id} + .dropdown-content`).css('display') !== "none"){
@@ -574,7 +597,11 @@ export default {
             else if(e.keyCode == backspace){
                 if(!this.mailInputs[e.target.id]){
                     this.hideSearchResult(e.target.id);
-                    /*this.mailInputArray[e.target.id] = this.mailInputArray[e.target.id].splice(this.mailInputArray[e.target.id].length - 1, 1);*/
+
+                    //remove an email if backspace is pressed on empty input
+                    if(this.mailInputArray[e.target.id].length){
+                        this.mailInputArray[e.target.id].splice(this.mailInputArray[e.target.id].length - 1, 1);
+                    }
                 }
             }
             else{
