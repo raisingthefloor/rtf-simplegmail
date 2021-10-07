@@ -152,8 +152,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </p>
                             </div>
                         </div>
-                        <div class="common__mail__bottom d-flex">
-                            <div class="dropdown mail__more__option ">
+                        <div class="common__mail__bottom d-flex" @keydown="mailBottomKeyDown">
+                            <!-- <div class="dropdown mail__more__option ">
                                 <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
                                     data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="far fa-ellipsis-v"></i>
@@ -166,7 +166,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <li><a class="dropdown-item" href="#">Print</a></li>
                                     <li><a class="dropdown-item" href="#">Check Spelling
                                         </a></li>
-                                    <li><a class="dropdown-item" href="#">-------------------
+                                    <li><a class="dropdown-item" href="#">
                                         </a></li>
                                     <li><a class="dropdown-item" href="#">Insert Photo
                                         </a></li>
@@ -176,21 +176,25 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         </a></li>
                                     <li><a class="dropdown-item" href="#">Insert Signature
                                         </a></li>
-                                    <li><a class="dropdown-item" href="#">--------------------
+                                    <li><a class="dropdown-item" href="#">
                                         </a></li>
                                     <li><a class="dropdown-item" href="#">Turn Confidential Mode on/Off
                                         </a></li>
                                     <li><a class="dropdown-item" href="#">Smart Compose Feedback
                                         </a></li>
                                 </ul>
-                            </div>
+                            </div> -->
                             <div class="mail__bottom__actions">
                                 <div class="mail__bottom__action">
                                     <a href="#"><span><img src="/assets/img/format.png" alt=""></span></a>
                                 </div>
                                 <div class="mail__bottom__action attach--file" title="Add Attachments">
                                     <input type="file" multiple @change="attachmentSelected" tabindex="-1" />
-                                    <a href="#"><span><img src="/assets/img/attach.png" alt="file_attachments"></span></a>
+                                    <a href="javascript:void(0)">
+                                        <span>
+                                            <img class="cursor-pointer" src="/assets/img/attach.png" alt="file_attachments" />
+                                        </span>
+                                    </a>
                                 </div>
                                 <div class="mail__bottom__action">
                                     <a href="#"><span><img src="/assets/img/emoji.png" alt=""></span></a>
@@ -211,7 +215,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
                 </div>
                 <div class="common__address__right">
-                    <div class="show__address__book">
+                    <div class="show__address__book" @keydown="showFullAddrBookKeyDown">
                         <router-link to="/address-book">
                             <span><i class="fal fa-address-book"></i></span>Show Full Address Book
                         </router-link>
@@ -221,8 +225,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <span><img src="/assets/img/book.png" alt=""></span>
                             <h6>Commonly Used Addresses </h6>
                         </div>
-                        <div class="used__adresses__item" v-if="otherContacts.length">
-                            <a href="javascript:void(0)" style="display:block;text-decoration:none" v-for="contact in otherContacts" :key="contact.etag" class="address__item" @mousedown="pushToActiveFields(contact)">
+                        <div class="used__adresses__item" v-if="otherContacts.length" @keydown="onCommonAddressKeyDown">
+                            <a href="javascript:void(0)" style="display:block;text-decoration:none" v-for="(contact, index) in otherContacts" :key="contact.etag" :class="['address__item']" @mousedown="pushToActiveFields(contact)" :ref="`common_addr_${index}`">
                                 {{contact.names ? contact.names[0].displayName : contact.emailAddresses[0].value}}     
                             </a>
                         </div>
@@ -269,7 +273,8 @@ export default {
             searchedContacts: [],
             inputIds: ['to', 'cc'],
             lastFocused: null,
-            currentIndex: 0
+            currentIndex: 0,
+            commonAdressCurrentIndex: 0
         }
     },
 
@@ -278,10 +283,7 @@ export default {
         if(this.$route.query.isReply){
             this.prepareMailObject();
         }
-        //redirect from address book with to field
-        if(this.$route.query.toAddress){
-            this.mail.to = this.$route.query.toAddress;
-        }
+        
         this.getOtherContacts();
         this.initQuillEditor();
     },
@@ -383,6 +385,11 @@ export default {
             axios.get('api/users/me/contacts/other')
             .then(payload => {
                 this.otherContacts = payload.data.data;
+                //redirected from address book with to field
+                if(this.$route.query.toAddress){
+                    //add the mail to MailInputArray.to array
+                    this.addToMailArray(this.$route.query.toAddress);
+                }
             })
             .catch(err => {
                 Sentry.captureException(err);
@@ -656,6 +663,86 @@ export default {
         isEmail(value){
             let regex = /^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/g;
             return regex.test(value);
+        },
+
+        onCommonAddressKeyDown(evt){
+            evt.preventDefault();
+
+            const {arrows, tab} = this.keyCodes;
+            //down arrow key is pressed
+            if(evt.keyCode == arrows.down || evt.keyCode == tab){
+                this.traverseCommonAddressDown();
+            }
+            //up arrow key is pressed
+            else if(evt.keyCode == arrows.up){
+                this.traverseCommonAddressUp();
+            }
+        },
+
+        traverseCommonAddressDown(){
+            //increment commonAddressCurrentIndex
+            this.incrementIndex();
+            
+            //focus the element
+            this.focusCommonAddrElement();
+        },
+
+        incrementIndex(){
+            //increment the commonAddressCurrentIndex state
+            this.commonAdressCurrentIndex = this.commonAdressCurrentIndex == this.otherContacts.length - 1 ? this.commonAdressCurrentIndex : this.commonAdressCurrentIndex + 1;
+        },
+
+        traverseCommonAddressUp(){
+            //goto show full address book button
+            if(this.commonAdressCurrentIndex === 0){
+                this.$refs[`common_addr_${this.commonAdressCurrentIndex}`].classList.remove('selected');
+                window.$(".show__address__book > a").focus();
+                return;
+            }
+
+            //decrease commonAddressCurrentIndex
+            this.decrementIndex();
+            //focus element
+            this.focusCommonAddrElement();
+        },
+
+        decrementIndex(){
+            //decrement the commonAddressCurrentIndex state
+            this.commonAdressCurrentIndex = this.commonAdressCurrentIndex == 0 ? this.commonAdressCurrentIndex : this.commonAdressCurrentIndex - 1;
+        },
+
+        focusCommonAddrElement(){
+            //get the element with its ref
+            let element = this.$refs[`common_addr_${this.commonAdressCurrentIndex}`];
+            //remove selected class if it already exists on AnchorListElement
+            window.$('.used__adresses__item a').removeClass('selected');
+            //focus the element
+            window.$(element).addClass('selected').focus();
+        },
+
+        showFullAddrBookKeyDown(e){
+            const {arrows, tab} = this.keyCodes;
+            e.preventDefault();
+            if(e.keyCode == arrows.down || e.keyCode == tab){
+                this.commonAdressCurrentIndex = 0;
+                this.focusCommonAddrElement();
+            }
+        },
+
+        mailBottomKeyDown(e){
+            //e.preventDefault();
+            const {arrows, tab} = this.keyCodes;
+
+            if(e.keyCode == arrows.right || e.keyCode == arrows.down || e.keyCode == tab){
+                window.$.tabNext()
+            }
+        },
+
+        addToMailArray(emailAddr){
+           let contact = this.otherContacts.find(contact => {return (contact.emailAddresses ? contact.emailAddresses[0].value.toLowerCase() == emailAddr.toLowerCase() : false)});
+            if(Object.keys(contact).length){
+                this.mailInputArray.to.push(contact);
+            }
         }
     }
 }
@@ -753,5 +840,9 @@ export default {
     
     .mail__write__input__field input[name='to'], .mail__write__input__field input[name='cc']{
         width:250px;
+    }
+
+    .used__adresses__item a.selected{
+        background-color: var(--bs-yellow);
     }
 </style>

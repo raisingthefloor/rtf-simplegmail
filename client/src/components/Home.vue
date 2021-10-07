@@ -88,6 +88,9 @@ export default{
     if(!this.appActiveUser.profilePicUrl){
       this.getProfilePicUrl();
     }
+
+    //add window resize event Listener
+    window.addEventListener('resize', () => this.windowResizeHandler());
   },
 
   /*beforeMount(){
@@ -216,6 +219,41 @@ export default{
         .catch(err => {
           Sentry.captureException(err);
         })
+    },
+
+    windowResizeHandler(){
+      //zoom level is 110%
+      if(Math.floor(window.devicePixelRatio * 100) == 110){
+        //remove other class
+        window.$(".main_menu").removeClass('menu_adjusted_height_150 menu_adjusted_height_125 menu_adjusted_height_200 menu_adjusted_height_175'); 
+        window.$(".main_menu").addClass('menu_adjusted_height_110'); 
+      }
+      //zoom level is 125%
+      else if(Math.floor(window.devicePixelRatio * 100) == 125){
+        window.$(".main_menu").removeClass('menu_adjusted_height_110 menu_adjusted_height_200 menu_adjusted_height_150 menu_adjusted_height_175'); 
+        window.$(".main_menu").addClass('menu_adjusted_height_125');
+      }
+      //zoom level is 150%
+      else if(Math.floor(window.devicePixelRatio * 100) == 150){
+        window.$(".main_menu").removeClass('menu_adjusted_height_110 menu_adjusted_height_125 menu_adjusted_height_200 menu_adjusted_height_175'); 
+        window.$(".main_menu").addClass('menu_adjusted_height_150');
+      }
+      else if(Math.floor(window.devicePixelRatio * 100) == 175){
+        //remove other class
+        window.$(".main_menu").removeClass('menu_adjusted_height_125 menu_adjusted_height_150 menu_adjusted_height_110 menu_adjusted_height_200'); 
+        window.$(".main_menu").addClass('menu_adjusted_height_175');  
+      }
+      //zoom level is 200%
+      else if(Math.floor(window.devicePixelRatio * 100) == 200){
+        //remove other class
+        window.$(".main_menu").removeClass('menu_adjusted_height_125 menu_adjusted_height_150 menu_adjusted_height_110 menu_adjusted_height_175'); 
+        window.$(".main_menu").addClass('menu_adjusted_height_200'); 
+      }
+      else{
+        //let regex = /[a-z_]*_\d*/;
+        /*let matchedClass =  document.querySelector(".main_menu").classList.value.match(regex)[0];*/
+        window.$(".main_menu").removeClass('menu_adjusted_height_150 menu_adjusted_height_125 menu_adjusted_height_110 menu_adjusted_height_200 menu_adjusted_height_175'); 
+      }
     }
   }
 }

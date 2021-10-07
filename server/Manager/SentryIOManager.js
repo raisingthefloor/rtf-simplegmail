@@ -37,7 +37,7 @@ module.exports.setup = app => {
             new Tracing.Integrations.Express({app}),
         ],
         tracesSampleRate: 1.0,
-        environment: process.env.NODE_ENV || "local"
+        environment: process.env.NODE_APP_ENV || "local"
     });
 
     return Sentry

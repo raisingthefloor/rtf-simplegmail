@@ -28,7 +28,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
         <div class="header__area">
         <div class="container">
             <div class="header__left">
-                <div class="menu__open">
+                <div class="menu__open" @click="toggleSideMenu" title="Open Menu">
                     <i class="far fa-bars"></i>
                 </div>
                 <div class="logo__main cursor-pointer">
@@ -120,8 +120,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </a>
 
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">Action</a></li>
-                            <li><a class="dropdown-item" href="#">Another action</a></li>
+                            <!-- <li><a class="dropdown-item" href="#">Action</a></li>
+                            <li><a class="dropdown-item" href="#">Another action</a></li> -->
                             <li @click="logoutHandler">
                                 <a class="dropdown-item" href="#">Logout</a>
                             </li>
@@ -131,7 +131,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
             </div>
         </div>
     </div>
-    <div class="offcanvas-overlay">
+    <div class="offcanvas-overlay" @click="toggleSideMenu">
 
     </div>
     <!-- Header area end -->
@@ -175,6 +175,10 @@ import {mapState} from "vuex"
                 this.$router.push('/login');
                 //this.googleLogoutHandler();
             },
+
+            toggleSideMenu(){
+                window.$('.menu__bar , .offcanvas-overlay').toggleClass('show');
+            }
 
             /*googleLogoutHandler(){
                 const auth2Instance = gapi.auth2.getAuthInstance();

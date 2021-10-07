@@ -1521,5 +1521,20 @@ a:hover {
     align-items: center;
     margin-bottom: 4px;
 }
+.menu_adjusted_height_110{
+  max-height: 290px;
+}
+.menu_adjusted_height_125{
+  max-height: 200px;
+}
+.menu_adjusted_height_150{
+  max-height: 150px;
+}
+.menu_adjusted_height_175{
+  max-height: 100px;
+}
+.menu_adjusted_height_200{
+  max-height: 50px;
+}
 
 /*---------------------- Main area end ----------------------*/
