@@ -66,11 +66,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </svg>
                             </a>
 
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
+                            <!-- <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
                                 <li><a class="dropdown-item" href="#">Action</a></li>
                                 <li><a class="dropdown-item" href="#">Another action</a></li>
                                 <li><a class="dropdown-item" href="#">Something else here</a></li>
-                            </ul>
+                            </ul> -->
                         </div>
                     </div>
                     <div class="head__right__btn">
@@ -96,11 +96,11 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </svg>
                             </a>
 
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
+                            <!-- <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
                                 <li><a class="dropdown-item" href="#">Action</a></li>
                                 <li><a class="dropdown-item" href="#">Another action</a></li>
                                 <li><a class="dropdown-item" href="#">Something else here</a></li>
-                            </ul>
+                            </ul> -->
                         </div>
                     </div>
                 </div>

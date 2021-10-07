@@ -40,7 +40,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         <p>From: {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}</p>
                                         <p class="date">{{moment(+message.internalDate).format('DD/MM/YY')}}</p>
                                     </div>
-                                    <!-- <p>RE: Coming home for Easter</p> -->
+                                    
                                 </div>
                             </button>
                         </div>
@@ -56,7 +56,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                             {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
                                         </p>
                                         <p><b> Copy also sent to:</b> </p>
-                                        <p><b>Subject:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "subject").value}}</p>
+                                        <p><b>Subject:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value}}</p>
                                     </div>
                                     <div class="mail__details__right">
                                         <div class="mail__time">
@@ -158,7 +158,9 @@ export default {
         getSentMessages(){
             axios.get('api/users/1/messages/sent')
                 .then(payload => {
-                    this.messages = payload.data.data;
+                    if(!payload.data.error && payload.data.data.length){
+                        this.messages = payload.data.data;
+                    }
                 })
                 .catch(err => {
                     Sentry.captureException(err);

@@ -34,7 +34,7 @@ const userDefaults = {
     isAuthenticated: false
 }
 
-const googleDefaults = {
+/*const googleDefaults = {
     apiKey: 'AIzaSyCXoNyOsBfvCk3GNuuEXfYmz3hJvwwZ_3k',
     discoveryDocs: ["https://people.googleapis.com/$discovery/rest?version=v1", 
             "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"],
@@ -42,15 +42,11 @@ const googleDefaults = {
     clientId: '417728105098-urn8v0e481l1mthrs3i3ltn1jumpejsk.apps.googleusercontent.com',
     scopes: 'profile https://mail.google.com/ https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/contacts.other.readonly',
     isSignedIn: false
-}
+}*/
 
 export default{
     setInitialDone: false,
-    googleCreds: googleDefaults,
-    user:{
-        name: 'Mayur Prakash Upadhayay',
-        email: 'mayur@raisingthefloor.org'
-    },
+    //googleCreds: googleDefaults,
     appActiveUser: userDefaults,
     //code: '',
     replyMailEntity: {

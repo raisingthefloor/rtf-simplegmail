@@ -81,9 +81,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                 <a href="#" class="common__btn" data-bs-toggle="modal" data-bs-target="#exampleModal">Add New Folder</a>
             </div>
             <div class="menu__bottom">
-                <a href=""><i class="fas fa-user"></i></a>
-                <a href="" class="active"><img src="/assets/img/google-hangouts-logo.png" alt=""></a>
-                <a href=""><i class="fas fa-phone fa-rotate-90"></i></a>
+                <a href="javascript:void(0)"><i class="fas fa-user"></i></a>
+                <a href="javascript:void(0)" class="active"><img src="/assets/img/google-hangouts-logo.png" alt=""></a>
+                <a href="javascript:void(0)"><i class="fas fa-phone fa-rotate-90"></i></a>
             </div>
         </div>
         <!--Menu Bar area end -->
@@ -104,6 +104,16 @@ export default {
         labels:{
             type: Array,
             required: true
+        }
+    },
+
+    watch:{
+        currentIndex(newVal){
+            if(newVal === 0){
+                setTimeout(() => {
+                    document.querySelector('.main_menu').scrollTop = 0;
+                }, 0);
+            }
         }
     },
 
@@ -132,7 +142,7 @@ export default {
                     else if(label.name == "SPAM"){
                         route = "spam";
                         text = "? Junk mail ?";
-                        imgSrc = null;
+                        imgSrc += "folder.png";
                     }
                     else if(label.name == "DRAFT"){
                         imgSrc += "pencil.png";
@@ -239,6 +249,7 @@ export default {
     }
     /*Removing unwanted margin-bottom*/
     .main_menu ul{
+        padding-top:5px;
         margin-bottom: unset;
     }
 </style>

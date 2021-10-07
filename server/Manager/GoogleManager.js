@@ -69,7 +69,10 @@ exports.getSingleProcessedMessageDetails = async function (auth, messageId) {
             userId: 'me',
             id: messageId
         }, (err, res) => {
-            if (err) return logger.error('The API returned an error: ' + err + ' and Message ID: ' + message.id)
+            if (err){
+                logger.error('The API returned an error: ' + err + ' and Message ID: ' + messageId);
+                reject({});
+            } 
 
             let mail_data = res.data
             let headers = mail_data.payload.headers
@@ -193,25 +196,6 @@ exports.getSingleProcessedMessageDetails = async function (auth, messageId) {
                     mail_data.decoded_body[0] = text
                 }
 
-
-                /*let attachments = mail_data.payload.parts.filter(obj => (obj.mimeType == "image/jpeg" || obj.mimeType == "image/png"))
-                //mail_data.decoded_attachments = attachments
-
-                mail_data.decoded_related_images = attachments
-
-
-                console.log("decoded_attachments", attachments.length)*/
-
-                /*for (let i = 0; i < mail_data.payload.parts.length; i++)
-                {
-
-                }*/
-                /*if(mail_data.payload.parts)
-                {
-                    console.log("mail parts", mail_data.payload.parts[0])
-                    console.log("mail parts", mail_data.payload.parts[1])
-
-                }*/
             }
 
             resolve(mail_data)
