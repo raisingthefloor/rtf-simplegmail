@@ -26,7 +26,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <template>
     <div>
         <!-- Menu Bar area start -->
-        <div class="menu__bar">
+        <div class="menu__bar" @click="toggleSideMenu">
             <div class="write__email__btn">
                 <router-link to="/mail-compose" class="common__btn">
                     <span><img src="/assets/img/pen.png" alt=""></span>Write <br> New email
@@ -224,6 +224,10 @@ export default {
         relayFocusToInbox(){
              //Set focus to message from the list
              window.$("#nav-home-tab-0").focus();
+        },
+
+        toggleSideMenu(){
+            window.$('.menu__bar , .offcanvas-overlay').toggleClass('show');
         }
     }
 }
