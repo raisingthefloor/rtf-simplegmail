@@ -58,7 +58,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                             {{message.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
                                         </p>
                                         <p><b> Copy also sent to:</b> </p>
-                                        <p><b>Subject:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "subject").value}}</p>
+                                        <p><b>Subject:</b> {{message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value}}</p>
                                     </div>
                                     <div class="mail__details__right">
                                         <div class="mail__time">

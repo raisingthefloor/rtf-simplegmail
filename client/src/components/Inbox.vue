@@ -45,7 +45,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <p class="date">{{moment(message.payload.headers.find(header => header.name.toLowerCase() == "date").value).format('DD/MM/YY')}}</p>
                                 </div>
                                 <div class="nav__btn__top">
-                                    <p>RE: {{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject").value)}} </p>
+                                    <p>RE: {{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}} </p>
                                     <p><span class="new__message">NEW</span></p>
                                 </div>
                                 
