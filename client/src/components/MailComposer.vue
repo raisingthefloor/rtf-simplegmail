@@ -538,7 +538,7 @@ export default {
             };
 
             //hiding the search result for to or cc
-            if(window.$(`#${this.lastFocused.context.id} + .dropdown-content`).css('display') !== "none"){
+            if(window.$(`#${this.lastFocused?.context.id} + .dropdown-content`).css('display') !== "none"){
                 this.hideSearchResult(this.lastFocused.context.id);
             }
         },
@@ -558,8 +558,8 @@ export default {
                 targetElementKey = 'to';
             }
             if(this.mailInputArray[targetElementKey].length){
-                let etagsArray = this.mailInputArray[targetElementKey].map(contact => contact.etag);
-                if(!etagsArray.includes(contact.etag)){
+                let uniqueEmailArray = this.mailInputArray[targetElementKey].map(contact => contact.emailAddresses[0].value);
+                if(!uniqueEmailArray.includes(contact.emailAddresses[0].value)){
                     this.mailInputArray[targetElementKey].push(contact);
                 }
             }
@@ -613,7 +613,7 @@ export default {
             }
             else{
                 //Search contacts based on char input
-                this.contactSearch(e);    
+                if(this.mailInputs[e.target.id]) this.contactSearch(e);    
             }
         },
 
