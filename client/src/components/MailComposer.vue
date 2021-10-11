@@ -125,7 +125,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="int--blk">
                                     <p>Subject:</p>
                                     <div class="mail__write__input__field">
-                                        <input name="subject" id="subject" v-model="mail.subject" type="text">
+                                        <input name="subject" id="subject" v-model="mail.subject" type="text" @keydown="onKeyDown">
                                     </div>
                                 </div>
                             </div>
@@ -206,7 +206,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     Send
                                 </button>
                                 <!--Calling send mail with saveAsDraft as true-->
-                                <button type="button" class="common__btn" @click="sendMail(true)">Save as Draft</button>
+                                <button type="button" :disabled="sendMailDisabled" @click="sendMail(true)" :class="['common__btn', sendMailDisabled ? 'disabled-btn' : '']">
+                                      Save as Draft
+                                </button>
+
                                 <button type="button" class="common__btn">Print</button>
                                 <button type="button" class="common__btn trash--btn"><span><img
                                             src="/assets/img/trash-1.png" alt=""></span><b>Put in TRASH</b></button>
@@ -274,7 +277,8 @@ export default {
             inputIds: ['to', 'cc'],
             lastFocused: null,
             currentIndex: 0,
-            commonAdressCurrentIndex: 0
+            commonAdressCurrentIndex: 0,
+            mailBottomIndex: 0
         }
     },
 
@@ -408,7 +412,7 @@ export default {
             }
             
             this.searchedContacts = this.searchedContacts.filter(contact => {
-                return (contact.emailAddresses[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id].toLowerCase()) || contact.names ? contact.names[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id].toLowerCase()) : false);
+                return (contact.emailAddresses[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id]?.toLowerCase()) || contact.names ? contact.names[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id]?.toLowerCase()) : false);
             });
         },
 
@@ -425,7 +429,7 @@ export default {
 
         hideSearchResult(mailProp){
             let dropdown = document.querySelector(`#${mailProp} + .dropdown-content`);
-            dropdown.style.display = "none";
+            if(dropdown) dropdown.style.display = "none";
         },
 
         initQuillEditor(){
@@ -454,9 +458,29 @@ export default {
                 tab: {
                     key: 9,
                     handler: function() {
-                      //moving focus to 
-                      window.$(".compose-editor + div").find("#dropdownMenuLink .far fa-ellipsis-v").focus();
                       return true;
+                    }
+                },
+                ArrowUp:{
+                    key: 38,
+                    handler: function(){
+                        //alert(window.$('.ql-editor'));
+                        //if editor content is empty
+                        if(!window.$('.ql-editor[contenteditable=true]')[0].textContent){
+                            //go to subject input
+                            window.$("#subject").focus();
+                            return true;
+                        }
+                    }
+                },
+                ArrowDown:{
+                    key: 40,
+                    handler: function(){
+                        //if editor content is empty
+                        if(!window.$('.ql-editor[contenteditable=true]')[0].textContent){
+                            window.$(".common__mail__bottom.d-flex").find('a,button:not(:disabled)')[0].focus();
+                            return true;
+                        }
                     }
                 }
             };
@@ -567,11 +591,12 @@ export default {
                 this.mailInputArray[targetElementKey].push(contact);
             }
             
-            this.resetFocusToLast();
+            setTimeout(() => this.resetFocusToLast());
         },
 
         resetFocusToLast(){
             //resetting focus to last element
+            if(!this.lastFocused) this.lastFocused = window.$("#to");
             window.$(this.lastFocused).focus();
         },
 
@@ -623,6 +648,32 @@ export default {
             //Close the search Result if tab is pressed
             if(e.keyCode == tab){
                 this.hideSearchResult(e.target.id);
+            }
+            //code for navigation between inputs i.e To,CC and Subject
+            //navigate only if target field is empty
+            else if(!this.mailInputs[e.target.id]){
+                let targetFocusId = "";
+                //listen for event on to field
+                if(e.target.id == "to"){
+                    if(e.key == "ArrowDown") targetFocusId = "cc";
+                    //go to sidebar labels if left arrow key is pressed and to field is empty
+                    this.relayFocusToSidebar();
+                }
+                //listen for event on cc field
+                else if(e.target.id == "cc"){
+                    if(e.key == "ArrowDown") targetFocusId = "subject";
+                    else if(e.key == "ArrowUp") targetFocusId = "to";
+                }
+                //listen for event on subject field
+                else if(e.target.id == "subject"){
+                    if(e.key == "ArrowDown"){
+                        //focus to .ql-editor
+                        window.$(".ql-editor").focus();
+                        return;
+                    }
+                    else if(e.key == "ArrowUp") targetFocusId = "cc";
+                }
+                window.$(`#${targetFocusId}`).focus();
             }
         },
 
@@ -721,11 +772,15 @@ export default {
         },
 
         showFullAddrBookKeyDown(e){
-            const {arrows, tab} = this.keyCodes;
             e.preventDefault();
-            if(e.keyCode == arrows.down || e.keyCode == tab){
+
+            if(e.key == "ArrowDown" || e.key == "Tab" || e.key == "ArrowRight"){
                 this.commonAdressCurrentIndex = 0;
                 this.focusCommonAddrElement();
+            }
+            else if(e.key == "ArrowLeft" || e.key == "ArrowUp"){
+                //relay focus back to div.common__mail__bottom.d-flex
+                window.$(".common__mail__bottom.d-flex").find('a,button:not(:disabled)').focus();
             }
         },
 
@@ -733,9 +788,37 @@ export default {
             //e.preventDefault();
             const {arrows, tab} = this.keyCodes;
 
+            //an array of focusable elements in div.common__mail__bottom.d-flex
+            let focusableElms = window.$(".common__mail__bottom.d-flex").find('a,button:not(:disabled)');
+
             if(e.keyCode == arrows.right || e.keyCode == arrows.down || e.keyCode == tab){
-                window.$.tabNext()
+                //increment index
+                if(this.mailBottomIndex < focusableElms.length) this.mailBottomIndex++; 
+
+                if(this.mailBottomIndex == focusableElms.length){
+                    this.mailBottomIndex = focusableElms.length-1;
+                    //if it is the last element in mail bottom div then shift focus to
+                    //show full address book button
+                    window.$(".show__address__book > a").focus();   
+                    return;
+                }
             }
+
+            else if(e.keyCode == arrows.up || e.keyCode == arrows.left){
+                if(this.mailBottomIndex == 0){
+                    //relay focus back to .ql-editor element
+                    window.$('.ql-editor').focus();
+                    return;
+                }
+                else{
+                    //decrement index
+                    this.mailBottomIndex--;                    
+                }
+
+            }
+
+            //focus element
+            window.$(focusableElms[this.mailBottomIndex]).focus();
         },
 
         addToMailArray(emailAddr){
@@ -743,6 +826,12 @@ export default {
             if(Object.keys(contact).length){
                 this.mailInputArray.to.push(contact);
             }
+        },
+
+        relayFocusToSidebar(){
+            //set the focus to the first label
+            let el = window.$("#lbl_id_0").find('a');
+            el.focus();
         }
     }
 }
