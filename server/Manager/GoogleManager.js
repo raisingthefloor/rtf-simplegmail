@@ -371,12 +371,15 @@ exports.saveAsDraft = async (raw, auth) => {
 };
 
 //get threads list of authenticated user
-exports.getThreadsList = async auth => {
+exports.getThreadsList = async (auth, nextPageToken, labelIds) => {
     return new Promise((resolve, reject) => {{
         const gmail = google.gmail({version: 'v1', auth});
         gmail.users.threads.list({
             userId: 'me',
-            includeSpamTrash: false
+            includeSpamTrash: false,
+            maxResults: 10,
+            labelIds: labelIds,
+            pageToken: nextPageToken
         }, (err, res) => {
             if(!err){
                 resolve(res.data);
@@ -393,7 +396,9 @@ exports.getThreadMessages = async (threadId, auth) => {
         const gmail = google.gmail({version: 'v1', auth});
         gmail.users.threads.get({
             userId: 'me',
-            id: threadId
+            id: threadId,
+            format: 'metadata',
+            metadataHeaders: ['From', 'To', 'Subject', 'Date']
         }, (err, res) => {
             if(!err){
                 resolve(res.data);
@@ -516,4 +521,23 @@ exports.getSingleMessageMetadata = async (auth, messageId) => {
             }
         });               
     });
+}
+
+exports.getContactGroupsList = async auth => {
+    return new Promise((resolve, reject) => {
+        //Instantiate the google's people service object
+        const peopleService = google.people({version: 'v1', auth});
+
+        peopleService.contactGroups.list({
+            groupFields: 'name,groupType'
+        }, (err, res) => {
+            if(!err){
+                resolve(res.data);
+            }
+            else{
+                logger.error(`Error while fetching contact groups : ${err}`);
+                reject([]);
+            }
+        });
+    });    
 }

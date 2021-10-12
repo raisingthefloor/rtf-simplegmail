@@ -24,138 +24,118 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 -->
 
 <template>
-    <div>
-        <div class="common__area d-flex justify-content-between">
-            <div class="common__tab__area diff" v-if="messages.length">
-                <nav>
-                    <div class="nav__title">
-                        <h5>email in <b>INBOX</b></h5>
-                    </div>
-                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <button v-for="(message, index) in messages" :key="index" @click="getMessageDetails(message.id);setCurrentIndex(index)"
-                            :class="['nav-link']" :id="`nav-home-tab-${index}`" data-bs-toggle="tab"
-                            :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
-                            :aria-selected="index == 0 ? 'true' : 'false'"
-                            :ref="`inbox_msg_${index}`"
-                            @keydown="onKeyDown"
-                        >
-                            <div class="nav__btn__content">
-                                <div class="nav__btn__top">
-                                    <p>From: {{$filters.strip_html(message.payload.headers.find(header => header.name.toLowerCase() == "from").value)}}</p>
-                                    <p class="date">{{moment(message.payload.headers.find(header => header.name.toLowerCase() == "date").value).format('DD/MM/YY')}}</p>
-                                </div>
-                                <div class="nav__btn__top">
-                                    <p>RE: {{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}} </p>
-                                    <p><span class="new__message">NEW</span></p>
-                                </div>
+    <!--New Threaded UI-->
+    <div :class="['common__area', 'justify-content-between', !messageDetails ? 'd-flex' : '']">
+        <div class="common__tab__area diff" v-if="threads.length">
+            <nav>
+                <div class="nav__title">
+                    <h5>email in <b>INBOX</b></h5>
+                </div>
+
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+
+                    <button v-for="(thread, index) in threads" :key="index" @click="getMessageDetails(thread.messages[thread.messages.length - 1].id);setCurrentIndex(index)" :class="['nav-link']" :id="`nav-home-tab-${index}`" data-bs-toggle="tab" :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home" :aria-selected="index == 0 ? 'true' : 'false'" :ref="`inbox_msg_${index}`" @keydown="onKeyDown"
+                    >
+                        <div class="nav__btn__content" v-if="thread.messages.length">
+                            <div class="nav__btn__top">
+                                <p>From: {{$filters.strip_html(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "from")?.value)}}
+
+                                    <b v-if="thread.messages.length > 1" :title="`${thread.messages.length} messages in this conversation`"
+                                    >
+                                        ({{thread.messages.length}})
+                                    </b>
+                                </p>  
+                                <p class="date">{{moment(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "date")?.value)?.format('DD/MM/YY')}}</p>
+                            </div>
+                            <div class="nav__btn__top">
+                                <p>RE: {{truncatedSubject(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}} </p>
+                                <p v-if="thread.messages[thread.messages.length - 1].labelIds.includes('UNREAD')">
+                                    <span class="new__message">NEW</span>
+                                </p>
+                            </div>
                                 
-                            </div>
-                        </button>
-                        <div v-if="nextPageToken" style="padding: 4px 8px;text-align: right;width: 100%;">
-                            <a @click="getInboxMessages" href="javascript:void(0)">More</a>
                         </div>
+                    </button>
+                    <div v-if="nextPageToken" style="padding: 4px 8px;text-align: right;width: 100%;">
+                        <a @click="getThreads" href="javascript:void(0)">More</a>
                     </div>
-                </nav>
-                <div class="tab-content" id="nav-tabContent" v-if="messageDetails && !loading">
-                    <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
-                        aria-labelledby="nav-home-tab">
-                        <div class="common__mail__wrapper">
-                            <div class="mail__details__blk position-relative">
-                                <div class="mail__details__left">
-                                    <p><b> TO:</b> {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "to")?.value ?? ''}}</p>
-                                    <p><b>From: </b>
-                                        {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "from").value}}
-                                    </p>
-                                    <p><b> Copy also sent to:</b> </p>
-                                    <p><b>Subject:</b> {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "subject").value}}</p>
-                                </div>
-                                <div class="mail__details__right">
-                                    <div class="mail__time">
-                                        <p>{{moment(+messageDetails.internalDate).format('DD/MM/YY hh:ss a')}}</p>
-                                    </div>
-                                </div>
-                                <div @click="closeMail" title="Close Mail" class="mail__close">
-                                    <i class="far fa-times"></i>
+                </div>
+            </nav>
+
+
+            <div class="tab-content" id="nav-tabContent" v-if="messageDetails && !loading">
+                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                    <div class="common__mail__wrapper">
+                        <div class="mail__details__blk position-relative">
+                            <div class="mail__details__left">
+                                <p>
+                                    <b> TO:</b> {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "to")?.value ?? ''}}
+                                </p>
+                                <p>
+                                    <b>From: </b>
+                                    {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "from")?.value}}
+                                </p>
+                                <p><b> Copy also sent to:</b> </p>
+                                <p>
+                                    <b>Subject:</b> 
+                                    {{messageDetails.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value}}
+                                </p>
+                            </div>
+                            <div class="mail__details__right">
+                                <div class="mail__time">
+                                    <p>{{moment(+messageDetails?.internalDate).format('DD/MM/YY HH:ss a')}}</p>
                                 </div>
                             </div>
-                            <div class="common__mail__body mail--content">
-                                <div class="msg-body" v-html="messageDetails.decoded_parts ? messageDetails.decoded_parts[0] : messageDetails.snippet"></div>
+                            <div @click="closeMail" title="Close Mail" class="mail__close">
+                                <i class="far fa-times"></i>
                             </div>
-                            <div class="common__mail__bottom d-flex">
-                                <div class="dropdown mail__more__option ">
-                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="far fa-ellipsis-v"></i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-start"
-                                        aria-labelledby="dropdownMenuLink">
-                                        <li><a class="dropdown-item" href="#"> Reply </a></li>
-                                        <li><a class="dropdown-item" href="#"> Reply to all
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Forward</a></li>
-                                        <li><a class="dropdown-item" href="#">Show Original
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Translate Message
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Download Message
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Move to folder (Add label) >
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">---------
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Mark as Unread (/Mark as Read)
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Mark as Important (/not important)
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Add Star (remove Star)
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">---------
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Create Event
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="#">Filter messages like these
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="#">Mute </a></li>
-                                        <li><a class="dropdown-item" href="#">Forward All
-                                        </a></li>
-                                    </ul>
-                                </div> 
-                                <div class="mail__bottom__btns">
-                                    <button @click="replyClicked(messageDetails)" type="button" class="common__btn">
-                                        Reply
-                                    </button>
-                                    <button type="button" class="common__btn">Reply to ALL</button>
-                                    <button type="button" class="common__btn">Send to another</button>
-                                    <button type="button" class="common__btn">Print</button>
-                                    <button type="button" class="common__btn">SAVE</button>
-                                    <button @click="moveToTrash(messageDetails.id)" type="button" class="common__btn trash--btn">
-                                        <span><img src="/assets/img/trash-1.png" alt=""></span>
-                                        <b>Put in TRASH</b>
-                                    </button>
-                                </div>
+                        </div>
+                        <div class="thread__area" v-if="hasMoreThanOneMessages">
+                            <p>(There are {{remainingMsgCount}} other emails in this conversation)</p>
+                            <!-- <a href="javascript:void(0)" @click>Show related emails</a> -->
+                            <router-link :to="`/inbox/thread/${messageDetails.threadId}`">Show related emails</router-link>
+
+                        </div>
+
+                        <div class="common__mail__body mail--content diff">
+                           <div v-html="messageDetails.decoded_parts ? messageDetails.decoded_parts[0] : messageDetails.snippet"></div>         
+                        </div>
+
+                        <div class="common__mail__bottom d-flex">
+                                    
+                            <div class="mail__bottom__btns">
+                                <button type="button" class="common__btn">Send again with message</button>
+                                <button type="button" class="common__btn">Send to another</button>
+                                <button type="button" class="common__btn">Print</button>
+                                <button type="button" class="common__btn trash--btn">
+                                    <span>
+                                        <img src="assets/img/trash-1.png" alt="">
+                                    </span>
+                                    <b>Put in TRASH</b>
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-                <!--Loader while message details are being fetched -->
-                <div v-if="loading" class="tab-content" id="nav-tabContent" style="width:700px">
-                    <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
-                        aria-labelledby="nav-home-tab">
-                        <div class="loader"></div>
-                    </div>
-                </div>
-            </div> 
-            <div v-if="loading && !messages.length" class="loader">
-                <!-- <img height="100" width="100" src="/assets/img/spinner.gif" /> -->
+                </div>    
             </div>
-            <div v-if="messages.length && !messageDetails && !loading" class="show__address__book m-width">
-                <router-link to="/address-book">
-                    <span><i class="fal fa-address-book"></i></span>Show Full Address Book
-                </router-link>
+            <!--Loader while message details are being fetched -->
+            <div v-if="loading" class="tab-content" id="nav-tabContent" style="width:700px">
+                <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
+                    aria-labelledby="nav-home-tab">
+                    <div class="loader"></div>
+                </div>
             </div>
-            
+        </div>
+
+        <div v-if="loading && !threads.length" class="loader"></div>
+
+        <div v-if="threads.length && !loading && !messageDetails" class="show__address__book m-width">
+            <router-link to="/address-book">
+                <span><i class="fal fa-address-book"></i></span>Show Full Address Book
+            </router-link>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -168,8 +148,9 @@ import { mapState } from 'vuex';
 export default {
     data(){
         return{
-            messages: [],
+            //messages: [],
             messageDetails: null,
+            threads: [],
             nextPageToken: null,
             moment: moment,
             loading: false,
@@ -178,13 +159,23 @@ export default {
     },
 
     created(){
-        this.getInboxMessages();
-        //this.getThreads();
+        //this.getInboxMessages();
+        this.getThreads();
         //this.getThreadMessages();
     },
 
     computed:{
         ...mapState(['keyCodes']),
+
+        hasMoreThanOneMessages(){
+            let thread = this.threads.find(thread => thread.id === this.messageDetails?.threadId);
+            return thread?.messages?.length > 1;
+        },
+
+        remainingMsgCount(){
+            let thread = this.threads.find(thread => thread.id === this.messageDetails?.threadId);
+            return thread?.messages?.length - 1; 
+        }
     },
 
     /*mounted(){
@@ -206,7 +197,7 @@ export default {
         }
     },*/ 
     methods:{
-        getInboxMessages(){
+        /*getInboxMessages(){
             this.messages = [];
             this.loading = true;
             axios.get(`api/users/me/messages/inbox?nextPage=${this.nextPageToken}`)
@@ -220,7 +211,7 @@ export default {
                 .catch(err => {
                     Sentry.captureException(err);
                 });
-        },
+        },*/
 
         moveToTrash(messageId){
             if(confirm("Are you sure you want to send this mail to Trash?")){
@@ -249,8 +240,18 @@ export default {
         },
 
         getThreads(){
-            axios.get('api/users/me/threads')
-                .then(response => console.log(response))
+            this.threads = [];
+            this.loading = true;
+            axios.get('api/users/me/inbox/threads?nextPage='+this.nextPageToken)
+                .then(response => {
+                    //response has no error
+                    if(!response.data.error){
+                        const {threads, nextPageToken} = response.data.data;
+                        this.threads = threads;
+                        this.nextPageToken = nextPageToken;
+                    }
+                    this.loading = false;
+                })
                 .catch(err => {
                     Sentry.captureException(err);
                 });
@@ -385,8 +386,13 @@ export default {
             //set the focus to the first label
             let el = window.$("#lbl_id_0").find('a');
             el.focus();
+        },
+
+        /*setCurrentThreadMsgs(){
+            let messages = this.threads.find(thread => thread.id === this.messageDetails.threadId)?.messages ?? [];
+            this.$store.commit('UPDATE_CURRENT_THREAD_MESSAGES', messages);
         }
-        /*getSingleProcessedMessage(msgId){
+        getSingleProcessedMessage(msgId){
             gapi.client.gmail.users.messages.get({
                 userId: 'me',
                 id: msgId
@@ -525,11 +531,4 @@ export default {
 .nav.nav-tabs button + a{
     margin-right: 0;
 }
-/*.msg-body{
-    max-height:250px;
-    overflow-y:auto;
-}
-.common__mail__body{
-    max-height:300px;
-}*/
 </style>

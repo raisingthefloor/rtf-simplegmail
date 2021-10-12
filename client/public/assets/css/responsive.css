@@ -4,6 +4,11 @@
         padding-left: 33px;
         width: 77%;
     }
+    .common__tab__area.diff.emails--in--this--conversation #nav-tabContent {
+	flex: 0 0 77%;
+	padding-right: 33px;
+	width: 77%;
+}
     .common__tab__area.diff nav {
         width: 23%;
         flex: 0 0 23%;
@@ -43,7 +48,7 @@
         padding: 6px 18px;
     }
     .common__mail__body {
-        min-height: 470px;
+        height: 470px;
     }
     .common__address__right {
         flex: 0 0 24%;
@@ -53,9 +58,7 @@
         flex: 0 0 74%;
         width: 74%;
     }
-    .draft__alert__wrap {
-        margin-top: 71px;
-    }
+   
 }
 
 @media (min-width: 320px) and (max-width: 1360px) {
@@ -78,7 +81,6 @@
     .draft__alert__wrap {
         max-width: 490px;
         padding: 20px 26px;
-        margin-top: 70px;
     }
     .address__book__wrapper {
         max-width: 715px;
@@ -95,7 +97,11 @@
         flex: 0 0 74%;
         padding-left: 30px;
         width: 74%;
-    }
+    }.common__tab__area.diff.emails--in--this--conversation #nav-tabContent {
+	flex: 0 0 74%;
+	padding-right: 28px;
+	width: 74%;
+}
     .main__area.search-result-page .mail__bottom__btns .common__btn {
         padding: 9px 15px;
         margin: 0 2px;
@@ -118,6 +124,9 @@
         width: 30px;
         height: 48px;
     }
+    .common__tab__area.diff.emails--in--this--conversation .nav-tabs .nav-link::before { 
+	left: -30px; 
+}
     .mail__bottom__btns .trash--btn {
         padding: 6px 18px;
     }
@@ -161,7 +170,6 @@
     .draft__alert__wrap {
         max-width: 450px;
         padding: 20px 18px;
-        margin-top: 70px;
     }
     .used__address__top img {
         max-width: 70px;
@@ -262,9 +270,15 @@
         width: 24px;
         height: 41px;
     }
+    .common__tab__area.diff.emails--in--this--conversation .nav-tabs .nav-link::before {
+	left: -25px;
+}
     .common__tab__area.diff #nav-tabContent {
         padding-left: 24px;
     }
+    .common__tab__area.diff.emails--in--this--conversation #nav-tabContent { 
+	padding-right: 24px; 
+}
     .common__tab__area .nav__title h5 {
         font-size: 19px;
     }
@@ -420,6 +434,10 @@
         flex: 0 0 72%;
         width: 72%;
     }
+    .common__tab__area.diff.emails--in--this--conversation #nav-tabContent {
+	flex: 0 0 72%; 
+	width: 72%;
+}
     .common__tab__area .nav__title h5 {
         font-size: 18px;
     }
@@ -452,9 +470,10 @@
         padding-left: 7px!important;
     }
     .address__book__wrapper nav {
-        width: 235px;
+        width: 190px;
         padding: 17px 17px;
         padding-right: 18px;
+        flex: 0 0 auto;
     }
     .address__book__wrapper nav h6 {
         font-size: 16px;
@@ -485,11 +504,23 @@
         max-width: 600px;
         margin-right: 36px;
         margin-left: 0;
+        min-width: 655px;
     }
+    .address__book__groups__column h6 {
+	font-size: 16px;  
+	margin-bottom: 9px;  
+}
+    .address__book__wrapper .address__book__groups__column { 
+	width: 160px; 
+	padding: 17px;
+}
+    .address__group__menu button { 
+	padding: 2px 11px; 
+	font-size: 16px; 
+}
     .draft__alert__wrap {
         max-width: 410px;
         padding: 19px 17px;
-        margin-top: 25px;
     }
     .draft__alert__wrap .common__btn {
         font-size: 14px;
@@ -539,7 +570,7 @@
         width: 100%;
     }
     .common__mail__body {
-        min-height: 220px;
+        height: 425px;
     }
     .mail__bottom__btns .common__btn {
         padding: 9px 12px;
@@ -571,6 +602,10 @@
         padding-bottom: 35px;
         padding-top: 90px;
     }
+    .main__area.addres__book__a {
+	padding-bottom: 0;
+	overflow-y: scroll; 
+}
     .header__search {
         width: 310px;
         height: 53px;
@@ -600,6 +635,14 @@
         flex: 0 0 50%;
         min-height: auto;
     }
+    .thread__area button {
+	margin-left: 14px; 
+	padding: 5px 15px;  
+}
+    .thread__area p {
+	font-size: 17px; 
+}
+    
     .header__area {
         overflow-y: auto;
         padding-right: 10px;
@@ -753,11 +796,3 @@
 }
 
 @media (min-width: 320px) and (max-width: 1500px) {}
-
-@media only screen and (min-width: 1336px){
-    .main_menu{
-        max-height: 470px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-}

@@ -504,14 +504,17 @@ class GmailController{
             if(!user){
                 response.error = true;
             }
-            let googleAuthCode = JSON.parse(user.googleAuth);
+            else{
+                let googleAuthCode = JSON.parse(user.googleAuth);
 
-            //check auth code is not empty
-            if(Object.keys(googleAuthCode).length){
-                oAuth2Client.setCredentials(googleAuthCode);
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
 
-                otherContacts = await GoogleManager.getOtherContacts(oAuth2Client);
+                    otherContacts = await GoogleManager.getOtherContacts(oAuth2Client);
+                }    
             }
+            
             response.data = otherContacts;
         }
         catch(exp){
@@ -524,22 +527,108 @@ class GmailController{
     }
 
     getThreads = async (req, res) => {
-        const oAuth2Client = this.getOAuth2Client();
+        //Response Data Object
+        let response = {error: false, data: {}};
+        let labelIds = [req.params.label.toUpperCase()];
+        let  {nextPage} = req.query;
+        nextPage = nextPage === "null" ? '' : nextPage;
+        let threadListRes = {};
+
+        try{
+            const oAuth2Client = this.getOAuth2Client();
         
-        let threads = [];
-        //get google authentication token from file
-        let googleAuthCode = JSON.parse(await fs.readFile('./gmail_credentials.txt'));
+            //get google authentication token from file//get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
 
-        //check auth code is not empty
-        if(Object.keys(googleAuthCode).length){
-            oAuth2Client.setCredentials(googleAuthCode);
+            if(!user){
+                response.error = true;
+            }
+            else{
+                const googleAuthCode = JSON.parse(user.googleAuth);
 
-            threads = await GoogleManager.getThreadsList(oAuth2Client);
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    //getting a specific number of threads - at most 10
+                    threadListRes = await GoogleManager.getThreadsList(oAuth2Client, nextPage, labelIds);
+
+                    response.data = {
+                        nextPageToken: threadListRes.nextPageToken,
+                        resultSizeEstimate: threadListRes.resultSizeEstimate,
+                        threads: []
+                    }
+
+                    //get messages for each threads
+                    for await (const thread of threadListRes.threads){
+                        //returns an array of messages in a single thread
+                        let threadPayload = await this.getThreadMessages(thread.id, oAuth2Client);
+                        threadPayload.threadSnippet = thread.snippet;
+                        //console.log(threadPayload);
+                        response.data.threads.push(threadPayload);
+                    };
+                }    
+            }
+
         }
-        res.send(threads);
+        catch(exp){
+            response.error = true;
+            response.data = exp;
+            Sentry.captureException(exp);
+            logger.error("Error while fetching threads : ",exp);
+        }
+        
+        res.send(response);
     }
 
-    getThreadMessages = async(req, res) => {
+    getThreadMessages = async (threadId, oAuth2Client) => {
+        try{
+            let result;
+            result = await GoogleManager.getThreadMessages(threadId, oAuth2Client);
+            return result;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            logger.error("Error while fetching threads : ",exp);   
+        }
+    }
+
+    getThreadById = async (req, res) => {
+        //Response Data Object
+        let response = {error: false, data: {}};
+        let thread = {}, threadId = req.params.threadId;
+
+        try{
+            //get oauth2client
+            const oAuth2Client = this.getOAuth2Client();
+            //get google authentication token from auth user
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                let googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+
+                    thread = await this.getThreadMessages(threadId, oAuth2Client);
+                }    
+            }
+
+            response.data = thread;
+        }
+        catch(exp){
+            response.error = true;
+            response.data = exp;
+            Sentry.captureException(exp);
+            logger.error("Error while fetching threads : ",exp);   
+        }
+
+        res.send(response);
+    }
+
+    /*getThreadMessages = async(req, res) => {
         const oAuth2Client = this.getOAuth2Client();
         
         let thread = {};
@@ -553,7 +642,7 @@ class GmailController{
             thread = await GoogleManager.getThreadMessages(req.params.tid, oAuth2Client);
         }
         res.send(thread);
-    }
+    }*/
 
     restoreMessage = async(req, res) => {
         let response = {error: false, data: {}};
@@ -734,6 +823,40 @@ class GmailController{
             response.data = exp;
             logger.error(`Error while fetching profie details : ${exp}`);
             response.error = true; 
+        }
+
+        res.send(response);
+    }
+
+    getContactGroups = async (req, res) => {
+        //response object structure
+        let response = {error: false, data: []};
+        //an array of contact groups
+        let contactGroups = [];
+        try{
+            //get Oauth2client instance
+            const oAuth2Client = this.getOAuth2Client();
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                const googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    contactGroups = await GoogleManager.getContactGroupsList(oAuth2Client);    
+                }
+            }
+
+            response.data = contactGroups;
+        }
+        catch(exp){
+            Sentry.captureException(exp);
+            response.data = exp;
+            logger.error(`Error while fetching profie details : ${exp}`);
+            response.error = true;    
         }
 
         res.send(response);
