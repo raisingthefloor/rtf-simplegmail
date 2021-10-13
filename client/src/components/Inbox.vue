@@ -368,12 +368,12 @@ export default {
         },
 
         traverseMsgListDown(){
-            this.currentIndex = (this.currentIndex + 1 ) % this.messages.length;
+            this.currentIndex = (this.currentIndex + 1 ) % this.threads.length;
             this.focusElement();
         },
 
         traverseMsgListUp(){
-            this.currentIndex = (this.currentIndex -1 + this.messages.length) % this.messages.length;
+            this.currentIndex = (this.currentIndex -1 + this.threads.length) % this.threads.length;
             this.focusElement();
         },
 
