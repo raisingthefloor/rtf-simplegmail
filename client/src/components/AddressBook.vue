@@ -33,7 +33,18 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </router-link>
                 </div>
                 <div class="address__book__wrapper">
-                    <nav>
+                    <div class="address__book__groups__column">
+                        <h6>groups</h6>
+                        <div class="address__group__menu" v-if="contactGroups.length">
+                            <button v-for="group in contactGroups" :key="group.resourceName">
+                                {{group.formattedName ?? ''}}
+                            </button>
+                        </div>
+                        <div v-else>
+                            <button>No Groups</button>
+                        </div>
+                    </div>
+                    <nav style="max-width:275px;min-width:275px;word-break:break-word">
                         <h6> MOST USED
                         </h6>
                         <div v-if="filteredContacts.length" class="nav nav-tabs border-0" id="nav-tab" role="tablist">
@@ -48,7 +59,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <p>No contacts found</p>
                         </div>
                     </nav>
-                    <div v-if="filteredContacts.length" class="tab-content" id="nav-tabContent">
+                    <div v-if="filteredContacts.length" class="tab-content" id="nav-tabContent" style="max-width:385px">
                         <div v-for="(contact, index) in filteredContacts" :key="index" :class="['tab-pane fade', index == 0 ? 'show active' : '']" :id="'nav-home-'+index" role="tabpanel"
                             aria-labelledby="nav-home-tab">
 
@@ -115,11 +126,13 @@ export default {
         return{
             contacts: [],
             filterKey: '',
+            contactGroups: []
         }
     },
 
     mounted(){
         this.getContacts();
+        this.getContactGroups();
     },
 
     computed:{
@@ -165,7 +178,28 @@ export default {
                 .catch(err => {
                     Sentry.captureException(err);
                 });
+        },
+
+        getContactGroups(){
+            axios.get('/api/users/me/contact/groups')
+                .then(res => {
+                    if(!res.data.error){
+                        this.contactGroups = res.data.data.contactGroups;
+                    }
+                })
+                .catch(err => {
+                    Sentry.captureException(err);
+                });
         }
     }
 }
 </script>
+
+<style>
+    @media (min-width: 320px) and (max-width: 1360px){
+        .address__book__wrapper {
+            max-width: unset;
+            margin-right: 70px;
+        }
+    }
+</style>

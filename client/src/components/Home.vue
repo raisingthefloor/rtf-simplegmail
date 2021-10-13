@@ -197,7 +197,7 @@ export default{
     },
 
     fetchGoogleLabels(){
-      axios('api/users/me/labels')
+      axios('/api/users/me/labels')
         .then(res => {
           if(!res.data.error){
             this.labels = res.data.data;

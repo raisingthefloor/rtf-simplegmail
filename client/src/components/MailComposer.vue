@@ -657,7 +657,10 @@ export default {
                 if(e.target.id == "to"){
                     if(e.key == "ArrowDown") targetFocusId = "cc";
                     //go to sidebar labels if left arrow key is pressed and to field is empty
-                    this.relayFocusToSidebar();
+                    if(e.key == "ArrowLeft"){
+                        this.relayFocusToSidebar();
+                        return;
+                    }
                 }
                 //listen for event on cc field
                 else if(e.target.id == "cc"){

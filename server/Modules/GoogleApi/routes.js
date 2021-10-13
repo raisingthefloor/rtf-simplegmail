@@ -33,6 +33,8 @@ module.exports = router => {
     router.post('/googlecallback', gmailController.googleCallback);
     router.get('/users/get-profile-pic', validateToken, gmailController.getProfilePic);
     router.get('/users/:id/messages/:type', validateToken, gmailController.getMails);
+    router.get('/users/:uid/:label/threads', validateToken, gmailController.getThreads);
+    router.get('/users/:uid/thread/:threadId', validateToken, gmailController.getThreadById);
     router.get('/users/:id/message/:mid', validateToken, gmailController.getMessageDetails);
     router.get('/users/:id/contacts', validateToken, gmailController.getAllContacts);
     router.post('/users/:uid/messages/:mid/trash', validateToken, gmailController.trashMessage);
@@ -41,11 +43,11 @@ module.exports = router => {
     router.post('/users/:uid/messages/:mid/restore', validateToken, gmailController.restoreMessage);
 
     router.get('/users/:uid/contacts/other', validateToken, gmailController.getOtherContacts);
-    router.get('/users/:uid/threads', gmailController.getThreads);
 
     router.get('/users/:uid/thread/:tid/messages', gmailController.getThreadMessages);
     router.get('/users/:uid/labels', validateToken, gmailController.getLabels);
     router.post('/users/:uid/labels/add', validateToken, gmailController.addLabels);
+    router.get('/users/:uid/contact/groups', validateToken, gmailController.getContactGroups);
     
     router.get('/connect', gmailController.googleConnect);
     //Authentication routes

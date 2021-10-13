@@ -43,6 +43,11 @@ const routes = [
                 name: "MailCompose",
                 component: () => import('../components/MailComposer.vue')
             },
+            {
+                path: "/:label/thread/:id",
+                name: "ThreadView",
+                component: () => import('../components/ThreadView.vue')
+            }
         ]
     },
     

@@ -25,13 +25,13 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <template>
     <div>
-        <!--------- Main area start --------->
-        <div class="main__area">
+        <!-- Main area start -->
+        <div class="main__area pl-0">
             <div class="container-fluid">
                 <router-view />
             </div>
         </div>
-        <!--------- Main area end --------->
+        <!-- Main area end -->
     </div>
 </template>
 
