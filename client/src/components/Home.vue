@@ -254,6 +254,10 @@ export default{
         /*let matchedClass =  document.querySelector(".main_menu").classList.value.match(regex)[0];*/
         window.$(".main_menu").removeClass('menu_adjusted_height_150 menu_adjusted_height_125 menu_adjusted_height_110 menu_adjusted_height_200 menu_adjusted_height_175'); 
       }
+
+      if(Math.floor(window.devicePixelRatio * 100) < 150){
+        window.$('.menu__bar , .offcanvas-overlay').removeClass('show');
+      }
     }
   }
 }
