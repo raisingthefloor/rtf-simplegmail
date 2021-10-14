@@ -184,7 +184,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         </a></li>
                                 </ul>
                             </div> -->
-                            <div class="mail__bottom__actions">
+                            <!-- <div class="mail__bottom__actions">
                                 <div class="mail__bottom__action">
                                     <a href="#"><span><img src="/assets/img/format.png" alt=""></span></a>
                                 </div>
@@ -199,7 +199,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <div class="mail__bottom__action">
                                     <a href="#"><span><img src="/assets/img/emoji.png" alt=""></span></a>
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="mail__bottom__btns">
                                 <button type="button" :disabled="sendMailDisabled" @click="sendMail(null)"
                                     :class="['common__btn', sendMailDisabled ? 'disabled-btn' : '']">
@@ -243,9 +243,13 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 import moment from 'moment';
 import axios from 'axios';
 import Quill from 'quill';
+import * as Emoji from "quill-emoji";
 import * as Sentry from "@sentry/vue";
 import {mapState} from "vuex";
 
+import "quill-emoji/dist/quill-emoji.css";
+
+Quill.register("modules/emoji", Emoji);
 export default {
     name: 'MailComposer',
 
@@ -364,7 +368,12 @@ export default {
         },
 
         setMailPayload(){
-            let mailToArray = this.mailInputArray.to.map(mailContact => mailContact.emailAddresses[0].value);
+            let mailToArray = this.mailInputArray.to.map(mailContact => {
+                if(mailContact.names){
+                    return `${mailContact.names[0].displayName}<${mailContact.emailAddresses[0].value}>`;
+                }
+                return mailContact.emailAddresses[0].value;
+            });
             let mailCcArray = this.mailInputArray.cc.map(mailContact => mailContact.emailAddresses[0].value);
 
             this.mail.to = mailToArray.join(',');
@@ -434,16 +443,18 @@ export default {
 
         initQuillEditor(){
             const toolbarOptions = [
+                [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                ['emoji'],                                        //Emoji icons
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                 ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
                 ['blockquote', /*'code-block'*/],
 
                 //[{ 'header': 1 }, { 'header': 2 }],               // custom button values
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                
                 //[{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
                 [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
                 [{ 'direction': 'rtl' }],                         // text direction
 
-                [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
                 //[{ 'header': [1, 2, 3, 4, 5, 6, false] }],
 
                 [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
@@ -489,6 +500,7 @@ export default {
             const quill = new Quill('#editor', {
                 modules:{
                     toolbar: toolbarOptions,
+                    "emoji-toolbar": true,
                     keyboard:{
                         bindings: keyboardBindings
                     }
@@ -502,9 +514,43 @@ export default {
                     this.mail.body = quill.root.innerHTML;
                 }
             });
+
             document.querySelector('.ql-editor').style.display = "none;";
+            //add custom attachment icon
+            this.addCustomAttachIcon();
             //Setting tabindex=-1 for quill toolbar
             window.$(".ql-toolbar *").attr('tabindex', '-1');
+        },
+
+        addCustomAttachIcon(){
+            //let toolBarContainer = window.$('.ql-toolbar');
+            let siblingElm = window.$(`div.ql-toolbar > span.ql-formats:nth-child(2)`)[0];
+
+            let spanCont = document.createElement('span');
+            spanCont.classList.add('ql-formats');
+
+            let label = document.createElement('label');
+            label.setAttribute('for', 'file-input');
+            label.classList.add('cursor-pointer');
+
+            let imgAttach = document.createElement('img');
+            imgAttach.height = imgAttach.width = '20';
+            imgAttach.src= '/assets/img/attach.png';
+            label.appendChild(imgAttach);
+
+            let fileElm = document.createElement('input');
+            fileElm.type = 'file';
+            fileElm.id = 'file-input'
+            fileElm.multiple = 'multiple';
+            fileElm.style.display = 'none';
+            spanCont.appendChild(label);
+            spanCont.appendChild(fileElm);
+
+            siblingElm.after(spanCont);
+
+
+            //Add event Listener to file
+            fileElm.addEventListener('change', (e) => this.attachmentSelected(e))
         },
 
         attachmentSelected(e){
@@ -514,6 +560,14 @@ export default {
             for(let i=0; i<fileList.length; ++i){
                 this.mail.attachments.push(fileList[i]);
             }
+
+            //Scroll to bottom when attachments are added
+            /*setTimeout(() => {
+                window.$('.compose-editor')[0].scrollTo({
+                    top: window.$('.compose-editor').height(),
+                    behaviour: 'smooth'
+                });
+            });*/
         },
 
         attachmentRemove(index){
@@ -936,5 +990,13 @@ export default {
 
     .used__adresses__item a.selected{
         background-color: var(--bs-yellow);
+    }
+
+    .ql-formats > label[for='file-input']{
+        margin-right: 40px;
+    }
+
+    .ql-formats > button.ql-emoji{
+        height: 30px;
     }
 </style>
