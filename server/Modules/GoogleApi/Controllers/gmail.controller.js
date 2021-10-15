@@ -846,7 +846,18 @@ class GmailController{
                 //check auth code is not empty
                 if(Object.keys(googleAuthCode).length){
                     oAuth2Client.setCredentials(googleAuthCode);
-                    contactGroups = await GoogleManager.getContactGroupsList(oAuth2Client);    
+                    contactGroups = await GoogleManager.getContactGroupsList(oAuth2Client);  
+                    //fetch contact group details for every entry in the list
+                    /*if(contactGroups.contactGroups.length){
+                        for(const contact of contactGroups.contactGroups){
+                            let peopleReourceNames = await GoogleManager.getContactGroupMemebers(contact.resourceName, oAuth2Client);
+                            
+                            //
+                            if(peopleReourceNames.length){
+                                contact.peoples = await GoogleManager.getContactMembersBatch(peopleReourceNames, oAuth2Client)
+                            }
+                        }
+                    }*/  
                 }
             }
 
@@ -855,9 +866,45 @@ class GmailController{
         catch(exp){
             Sentry.captureException(exp);
             response.data = exp;
-            logger.error(`Error while fetching profie details : ${exp}`);
+            logger.error(`Error while fetching contact groups : ${exp}`);
             response.error = true;    
         }
+
+        res.send(response);
+    }
+
+    getContactGroupMembers = async (req, res) => {
+        //response object structure
+        let response = {error: false, data: []};
+        //getting resource name from req params
+        let contactGroupResourceName = "contactGroups/"+req.params.contactid;
+        let contacts = [];
+        
+        try{
+            //get Oauth2client instance
+            const oAuth2Client = this.getOAuth2Client();
+            let user = await User.findOne({_id: req.user.id});
+            if(!user){
+                response.error = true;
+            }
+            else{
+                const googleAuthCode = JSON.parse(user.googleAuth);
+
+                //check auth code is not empty
+                if(Object.keys(googleAuthCode).length){
+                    oAuth2Client.setCredentials(googleAuthCode);
+                    //returns an array of member resource id
+                    contacts = await GoogleManager.getContactGroupMemebers(contactGroupResourceName,oAuth2Client);
+                    contacts = await GoogleManager.getContactMembersInBatch(contacts, oAuth2Client);
+                }
+            }
+            response.data = contacts;
+        }   
+        catch(e){
+            Sentry.captureException(e);
+            response.error = true;
+            logger.error(e);
+        }     
 
         res.send(response);
     }
