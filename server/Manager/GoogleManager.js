@@ -529,7 +529,7 @@ exports.getContactGroupsList = async auth => {
         const peopleService = google.people({version: 'v1', auth});
 
         peopleService.contactGroups.list({
-            groupFields: 'name,groupType'
+            groupFields: 'name,groupType,memberCount'
         }, (err, res) => {
             if(!err){
                 resolve(res.data);
@@ -540,4 +540,52 @@ exports.getContactGroupsList = async auth => {
             }
         });
     });    
+}
+
+exports.getContactGroupMemebers = async (resourceName, auth) => {
+    return new Promise((resolve, reject) => {
+        //Instantiate the google's people service object
+        const peopleService = google.people({version: 'v1', auth});
+
+        peopleService.contactGroups.get({
+            resourceName,
+            groupFields: 'name',
+            maxMembers: 1000
+        }, (err, res) => {
+            if(!err){
+                //sending member resources names only
+                resolve(res.data.memberResourceNames ?? []);
+            }
+            else{
+                logger.error(`Error while fetching contact group members in Manager : ${err}`);
+                reject([]);
+            }
+        });
+    });
+}
+
+exports.getContactMembersInBatch = async (resourceNames, auth) => {
+    return new Promise((resolve, reject) => {
+        //Instantiate the google's people service object
+        const peopleService = google.people({version: 'v1', auth});
+
+        peopleService.people.getBatchGet({
+            resourceNames,
+            personFields: 'names,emailAddresses,photos'
+        }, (err, res) => {
+            if(!err){
+                let people = [];
+
+                for(const response of res.data.responses){
+                    people.push(response.person);
+                }
+
+                resolve(people);
+            }
+            else{
+                logger.error(`Error while gettting contact members in batch : ${err}`);
+                reject([]);
+            }
+        });        
+    })
 }

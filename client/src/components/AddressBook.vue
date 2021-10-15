@@ -36,31 +36,43 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <div class="address__book__groups__column">
                         <h6>groups</h6>
                         <div class="address__group__menu" v-if="contactGroups.length">
-                            <button v-for="group in contactGroups" :key="group.resourceName">
-                                {{group.formattedName ?? ''}}
+                            <button v-for="(group,index) in contactGroups" :key="group.resourceName" :class="['nav-link', index ==  selectedContactGroupIndex ? 'active' : '']" @click="contactGroupSelected(index)"
+                            >
+                                {{group?.formattedName ?? ''}}
                             </button>
                         </div>
                         <div v-else>
                             <button>No Groups</button>
                         </div>
+                        <div class="mt-4" v-if="loading && contactGroups.length <= 1">
+                            <p class="text-center">
+                                <img src="/assets/img/spinner.gif" height="40" width='40'>
+                            </p>
+                        </div>
                     </div>
                     <nav style="max-width:275px;min-width:275px;word-break:break-word">
-                        <h6> MOST USED
+                        <h6 class="text-uppercase"> 
+                            {{activeContactGroupName}}
                         </h6>
                         <div v-if="filteredContacts.length" class="nav nav-tabs border-0" id="nav-tab" role="tablist">
-                            <button v-for="(contact, index) in filteredContacts" :key="index" :class="['nav-link', index == 0 ? 'active' : '']" id="nav-home-tab" data-bs-toggle="tab"
+                            <button v-for="(contact, index) in filteredContacts" :key="index" :class="['nav-link', index == filteredContactIndex ? 'active' : '']" id="nav-home-tab" data-bs-toggle="tab"
                                 :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home"
-                                aria-selected="true">
+                                aria-selected="true" @click="filteredContactIndex = index">
                                 {{contact.names ? contact.names[0]?.displayName : contact.emailAddresses ? contact.emailAddresses[0]?.value : ''}}
                             </button>
                             
                         </div>
-                        <div v-else>
+                        <div v-if="loading && !filteredContacts.length" class="mt-4">
+                            <p class="text-center">
+                                <img src="/assets/img/spinner.gif" height="40" width='40'>
+                            </p>
+                        </div>
+                        <div v-if="!filteredContacts.length && !loading">
                             <p>No contacts found</p>
                         </div>
                     </nav>
                     <div v-if="filteredContacts.length" class="tab-content" id="nav-tabContent" style="max-width:385px">
-                        <div v-for="(contact, index) in filteredContacts" :key="index" :class="['tab-pane fade', index == 0 ? 'show active' : '']" :id="'nav-home-'+index" role="tabpanel"
+                        <div v-for="(contact, index) in filteredContacts" :key="index" :class="['tab-pane fade', index == filteredContactIndex ? 'show active' : '']" :id="'nav-home-'+index" role="tabpanel"
                             aria-labelledby="nav-home-tab">
 
                             <div class="user__address__wrapper">
@@ -103,10 +115,10 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
                     
                     <div class="book__pagination">
-                        <h6 style="cursor:pointer" @click="filterKey=''" title="Reset Filter">★</h6>
+                        <h6 class="cursor-pointer" @click="filterClear" title="Reset Filter">★</h6>
                         <ul>
                             <li v-for="(letter, index) in alphabetIterator" :key="index">
-                                <a href="javascript:void(0)" @click="filterKey=letter.toLowerCase()">{{letter}}</a>
+                                <a href="javascript:void(0)" @click="filterApplied(letter)">{{letter}}</a>
                             </li>
                         </ul>
                     </div>
@@ -125,14 +137,17 @@ export default {
     data(){
         return{
             contacts: [],
+            othercontacts: [],
             filterKey: '',
-            contactGroups: []
+            contactGroups: [],
+            selectedContactGroupIndex: 0,
+            filteredContactIndex: 0,
+            loading: false
         }
     },
 
     mounted(){
         this.getContacts();
-        this.getContactGroups();
     },
 
     computed:{
@@ -164,6 +179,10 @@ export default {
             };
         },
 
+        activeContactGroupName(){
+            return this.contactGroups[this.selectedContactGroupIndex]?.formattedName ?? 'group name';
+        },
+
         ...mapGetters(['lastActiveRoute'])
     },
 
@@ -173,6 +192,14 @@ export default {
                 .then(response => {
                     if(!response.data.error){
                         this.contacts = response.data.data;
+                        this.contactGroups.push({
+                            resourceName: 'contactGroups/other',
+                            name: 'most_used',
+                            formattedName: 'Most Used',
+                            people: this.contacts,
+                            memberCount: this.contacts.length
+                        });
+                        this.getContactGroups();
                     }
                 })
                 .catch(err => {
@@ -181,15 +208,68 @@ export default {
         },
 
         getContactGroups(){
+            this.loading = true;
             axios.get('/api/users/me/contact/groups')
                 .then(res => {
                     if(!res.data.error){
-                        this.contactGroups = res.data.data.contactGroups;
+                        this.contactGroups = this.contactGroups.concat(res.data.data.contactGroups);
                     }
                 })
                 .catch(err => {
                     Sentry.captureException(err);
-                });
+                })
+                .finally(() => this.loading = false);
+        },
+
+        contactGroupSelected(index){
+            this.contacts = [];
+            this.filteredContactIndex = 0;
+            this.selectedContactGroupIndex = index;
+            
+            //check selected group has contacts or not
+            if(!this.contactGroups[this.selectedContactGroupIndex].memberCount){
+                this.contacts = [];
+            }
+            /*else if(this.contactGroups[this.selectedContactGroupIndex].name === "most_used"){
+                this.contacts = this.otherContacts;
+            }*/
+            else/* if(this.contactGroups[this.selectedContactGroupIndex].memberCount)*/
+            {
+                //check if contact group has people array
+                if(!this.contactGroups[index].people || !this.contactGroups[index].people.length){
+                    //fetch people if it is not already populated for the group
+                    this.getGroupMembers(index);
+                }
+                else{
+                    //set contacts = group people if they are already populated
+                    this.contacts = this.contactGroups[index].people;
+                }
+            }
+        },
+
+        getGroupMembers(groupIndex){
+            this.loading = true;
+            let groupResourceName = this.contactGroups[groupIndex].resourceName;
+            groupResourceName = groupResourceName.split('/')[1];
+            axios.get(`/api/users/contact-group/${groupResourceName}/members`)
+                .then(res => {
+                    if(!res.data.error){
+                        this.contactGroups[groupIndex].people = res.data.data;
+                        this.contacts = this.contactGroups[groupIndex].people;
+                    }
+                })
+                .catch(err => Sentry.captureException(err))
+                .finally(() => this.loading = false);
+        },
+
+        filterApplied(letter){
+            this.filteredContactIndex = 0;
+            if(this.contacts.length) this.filterKey=letter.toLowerCase();
+        },
+
+        filterClear(){
+            this.filteredContactIndex = 0;
+            this.filterKey = '';
         }
     }
 }
@@ -201,5 +281,9 @@ export default {
             max-width: unset;
             margin-right: 70px;
         }
+    }
+
+    .text-uppercase{
+        text-transform: uppercase;
     }
 </style>

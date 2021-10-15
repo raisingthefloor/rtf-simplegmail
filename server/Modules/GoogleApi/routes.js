@@ -43,6 +43,7 @@ module.exports = router => {
     router.post('/users/:uid/messages/:mid/restore', validateToken, gmailController.restoreMessage);
 
     router.get('/users/:uid/contacts/other', validateToken, gmailController.getOtherContacts);
+    router.get('/users/contact-group/:contactid/members', validateToken, gmailController.getContactGroupMembers);
 
     router.get('/users/:uid/thread/:tid/messages', gmailController.getThreadMessages);
     router.get('/users/:uid/labels', validateToken, gmailController.getLabels);

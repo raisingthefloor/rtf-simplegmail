@@ -25,27 +25,33 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
 <template>
     <!--New Threaded UI-->
-    <div :class="['common__area', 'justify-content-between', !messageDetails ? 'd-flex' : '']">
-        <div class="common__tab__area diff" v-if="threads.length">
-            <nav>
+    <div :class="['common__area', (!messageDetails && !showThreadUI) ? 'd-flex justify-content-between' : '']">
+        <div :class="['common__tab__area','diff', showThreadUI ? 'emails--in--this--conversation' : '']" v-if="threads.length">
+            <nav v-show="!showThreadUI">
                 <div class="nav__title">
                     <h5>email in <b>INBOX</b></h5>
                 </div>
 
                 <div class="nav nav-tabs" id="nav-tab" role="tablist">
 
-                    <button v-for="(thread, index) in threads" :key="index" @click="getMessageDetails(thread.messages[thread.messages.length - 1].id);setCurrentIndex(index)" :class="['nav-link']" :id="`nav-home-tab-${index}`" data-bs-toggle="tab" :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home" :aria-selected="index == 0 ? 'true' : 'false'" :ref="`inbox_msg_${index}`" @keydown="onKeyDown"
+                    <button v-for="(thread, index) in threads" :key="index" @click="getMessageDetails(thread.messages[thread.messages.length - 1].id);setCurrentIndex(index)" :class="['nav-link', messageDetails?.threadId === thread.id ? 'active' : '']" :id="`nav-home-tab-${index}`" data-bs-toggle="tab" :data-bs-target="'#nav-home-'+index" type="button" role="tab" aria-controls="nav-home" :aria-selected="index == 0 ? 'true' : 'false'" :ref="`inbox_msg_${index}`" @keydown="onKeyDown"
                     >
                         <div class="nav__btn__content" v-if="thread.messages.length">
-                            <div class="nav__btn__top">
-                                <p>From: {{$filters.strip_html(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "from")?.value)}}
+                            <div class="nav__btn__top__grid">
+                                <p >
+                                    From: {{$filters.strip_html(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "from")?.value)}}
+                                </p>  
 
+                                <p>
                                     <b v-if="thread.messages.length > 1" :title="`${thread.messages.length} messages in this conversation`"
                                     >
                                         ({{thread.messages.length}})
                                     </b>
-                                </p>  
-                                <p class="date">{{moment(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "date")?.value)?.format('DD/MM/YY')}}</p>
+                                </p>
+
+                                <p class="date" >
+                                    {{moment(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "date")?.value)?.format('DD/MM/YY')}}
+                                </p>
                             </div>
                             <div class="nav__btn__top">
                                 <p>RE: {{truncatedSubject(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}} </p>
@@ -92,9 +98,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         </div>
                         <div class="thread__area" v-if="hasMoreThanOneMessages">
                             <p>(There are {{remainingMsgCount}} other emails in this conversation)</p>
-                            <!-- <a href="javascript:void(0)" @click>Show related emails</a> -->
-                            <router-link :to="`/inbox/thread/${messageDetails.threadId}`">Show related emails</router-link>
-
+                            <a v-if="showThreadUI" href="javascript:void(0)" @click="hideRelatedEmails" class="bg--orange">Hide related emails</a>
+                            <a v-else href="javascript:void(0)" @click="dispThreadView">Show related emails</a>
+                            
                         </div>
 
                         <div class="common__mail__body mail--content diff">
@@ -118,6 +124,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
                 </div>    
             </div>
+
             <!--Loader while message details are being fetched -->
             <div v-if="loading" class="tab-content" id="nav-tabContent" style="width:700px">
                 <div class="tab-pane fade active show" id="nav-home-1" role="tabpanel"
@@ -125,11 +132,34 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <div class="loader"></div>
                 </div>
             </div>
+
+            <!--Show this nav when showThreadUI is true-->
+            <nav v-show="showThreadUI">
+                <div class="nav__title bg--orange">
+                    <h5>EMAILS IN THIS CONVERSATION</h5>
+                </div>
+
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button v-for="(message, index) in messages" :key="index" :class="['nav-link', message.id === messageDetails?.id ? 'active' : '']" :id="`nav-contact-tab-${index}`" data-bs-toggle="tab" data-bs-target="#nav-contact2" type="button" role="tab" aria-controls="nav-contact2" aria-selected="false" @click="getMessageDetails(message.id)"
+                    >
+                        <div class="nav__btn__content">
+                            <div class="nav__btn__top">
+                                <p>From: {{message.payload.headers.find(header => header.name.toLowerCase() == "from")?.value}}</p>
+
+                                <p class="date">{{moment(+message.internalDate)?.format('DD/MM/YY')}}</p>
+                            </div>
+
+                            <p>{{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}}</p>
+                        </div>
+                    </button>
+                </div>
+            </nav>
+
         </div>
 
         <div v-if="loading && !threads.length" class="loader"></div>
 
-        <div v-if="threads.length && !loading && !messageDetails" class="show__address__book m-width">
+        <div v-if="threads.length && !loading && !messageDetails && !showThreadUI" class="show__address__book m-width">
             <router-link to="/address-book">
                 <span><i class="fal fa-address-book"></i></span>Show Full Address Book
             </router-link>
@@ -148,13 +178,15 @@ import { mapState } from 'vuex';
 export default {
     data(){
         return{
-            //messages: [],
+            messages: [],
             messageDetails: null,
             threads: [],
             nextPageToken: null,
             moment: moment,
             loading: false,
-            currentIndex: 0
+            currentIndex: 0,
+            showThreadUI: false,
+            lastDisplayedMsgDetails: null
         }
     },
 
@@ -388,6 +420,19 @@ export default {
             el.focus();
         },
 
+        dispThreadView(){
+            //remembering the last displayed thread message details
+            this.lastDisplayedMsgDetails = this.messageDetails;
+
+            this.showThreadUI = true;
+            this.messages = this.threads.find(thread => thread.id === this.messageDetails.threadId)?.messages ?? [];
+        },
+
+        hideRelatedEmails(){
+            this.showThreadUI = false;
+            this.messageDetails = this.lastDisplayedMsgDetails;
+        }
+
         /*setCurrentThreadMsgs(){
             let messages = this.threads.find(thread => thread.id === this.messageDetails.threadId)?.messages ?? [];
             this.$store.commit('UPDATE_CURRENT_THREAD_MESSAGES', messages);
@@ -530,5 +575,12 @@ export default {
 }
 .nav.nav-tabs button + a{
     margin-right: 0;
+}
+.common__tab__area.emails--in--this--conversation{
+    justify-content: flex-end;
+}
+.nav__btn__top__grid{
+    display: grid;
+    grid-template-columns: 65% 15% 20%;
 }
 </style>

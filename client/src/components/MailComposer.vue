@@ -226,7 +226,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <div class="used__addresses">
                         <div class="used__address__top">
                             <span><img src="/assets/img/book.png" alt=""></span>
-                            <h6>Commonly Used Addresses </h6>
+                            <h6>Most Used Addresses </h6>
                         </div>
                         <div class="used__adresses__item" v-if="otherContacts.length" @keydown="onCommonAddressKeyDown">
                             <a href="javascript:void(0)" style="display:block;text-decoration:none" v-for="(contact, index) in otherContacts" :key="contact.etag" :class="['address__item']" @mousedown="pushToActiveFields(contact)" :ref="`common_addr_${index}`">
