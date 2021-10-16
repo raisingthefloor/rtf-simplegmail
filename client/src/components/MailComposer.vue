@@ -470,13 +470,13 @@ export default {
 
             //Keyboard bindings
             //these bindings should run before Quill's defaults
-            const keyboardBindings = {
-                /*tab: {
+            /*const keyboardBindings = {
+                tab: {
                     key: 9,
                     handler: function(range, context) {
                       console.log({range, context})
                     }
-                },*/
+                },
                 ArrowUp:{
                     key: 38,
                     handler: function(){
@@ -499,16 +499,16 @@ export default {
                         return true;
                     }
                 }
-            };
+            };*/
 
             //Creating a quill intsance
             this.quill = new Quill('#editor', {
                 modules:{
                     toolbar: toolbarOptions,
                     "emoji-toolbar": true,
-                    keyboard:{
+                    /*keyboard:{
                         bindings: keyboardBindings
-                    }
+                    }*/
                 },
                 theme: 'snow',
                 scrollingContainer: '#editor'
