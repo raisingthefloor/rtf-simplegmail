@@ -142,7 +142,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             <textarea v-model="mail.body" name="mail.body" id="body"></textarea>
                         </div> -->
                         <div class="compose-editor">
-                            <div id="editor">
+                            <div id="editor" @keydown="editorKeyDown">
                                 
                             </div>
                             <div class="attachment-container" v-if="mail.attachments.length">
@@ -255,6 +255,7 @@ export default {
 
     data(){
         return{
+            quill: null,
             moment: moment,
             mail:{
                 to: null,
@@ -282,7 +283,8 @@ export default {
             lastFocused: null,
             currentIndex: 0,
             commonAdressCurrentIndex: 0,
-            mailBottomIndex: 0
+            mailBottomIndex: 0,
+            hasEscPredence: false
         }
     },
 
@@ -412,17 +414,19 @@ export default {
         contactSearch(e){
             this.searchedContacts = this.otherContacts;
             this.currentIndex = 0;
+
+            //apply search filter
+            this.searchedContacts = this.searchedContacts.filter(contact => {
+                return (contact.emailAddresses[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id]?.toLowerCase()));
+            });
+
             let resultDropdown = document.querySelector(`#${e.target.id} + .dropdown-content`);
-            if(this.mailInputs[e.target.id]){
+            if(this.mailInputs[e.target.id] && this.searchedContacts.length){
                 resultDropdown.style.display = "block";
             }
             else{
                 resultDropdown.style.display = "none";
             }
-            
-            this.searchedContacts = this.searchedContacts.filter(contact => {
-                return (contact.emailAddresses[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id]?.toLowerCase()) || contact.names ? contact.names[0].value.toLowerCase().startsWith(this.mailInputs[e.target.id]?.toLowerCase()) : false);
-            });
         },
 
         contactSelected(e, mailProp, itemIndex){
@@ -465,13 +469,14 @@ export default {
             ];
 
             //Keyboard bindings
+            //these bindings should run before Quill's defaults
             const keyboardBindings = {
-                tab: {
+                /*tab: {
                     key: 9,
-                    handler: function() {
-                      return true;
+                    handler: function(range, context) {
+                      console.log({range, context})
                     }
-                },
+                },*/
                 ArrowUp:{
                     key: 38,
                     handler: function(){
@@ -480,8 +485,8 @@ export default {
                         if(!window.$('.ql-editor[contenteditable=true]')[0].textContent){
                             //go to subject input
                             window.$("#subject").focus();
-                            return true;
                         }
+                        return true;
                     }
                 },
                 ArrowDown:{
@@ -490,14 +495,14 @@ export default {
                         //if editor content is empty
                         if(!window.$('.ql-editor[contenteditable=true]')[0].textContent){
                             window.$(".common__mail__bottom.d-flex").find('a,button:not(:disabled)')[0].focus();
-                            return true;
                         }
+                        return true;
                     }
                 }
             };
 
             //Creating a quill intsance
-            const quill = new Quill('#editor', {
+            this.quill = new Quill('#editor', {
                 modules:{
                     toolbar: toolbarOptions,
                     "emoji-toolbar": true,
@@ -509,13 +514,25 @@ export default {
                 scrollingContainer: '#editor'
             });
 
-            quill.on('editor-change', (eventName) => {
-                if (eventName === 'text-change') {
-                    this.mail.body = quill.root.innerHTML;
+            //adding keyboard bindings
+            this.quill.keyboard.bindings[9].unshift({
+                key: 9,
+                handler(){
+                    if(this.hasEscPredence){
+                        return false;
+                    }
+                    return true;
                 }
             });
 
-            document.querySelector('.ql-editor').style.display = "none;";
+
+            this.quill.on('editor-change', (eventName) => {
+                if (eventName === 'text-change') {
+                    this.mail.body = this.quill.root.innerHTML;
+                }
+            });
+
+            //document.querySelector('.ql-editor').style.display = "none;";
             //add custom attachment icon
             this.addCustomAttachIcon();
             //Setting tabindex=-1 for quill toolbar
@@ -664,11 +681,13 @@ export default {
                     //validate the input value and accept it if okay
                     this.validateMailandAccept(e.target.id);
                 }
+                else{
+                    this.hideSearchResult(e.target.id);
 
-                this.hideSearchResult(e.target.id);
-
-                //on pressing enter populate the field
-                if(e.keyCode == enter) this.populateFieldViaKeyboard(e.target.id);            
+                    //on pressing enter populate the field
+                    if(e.keyCode == enter) this.populateFieldViaKeyboard(e.target.id);            
+                }
+                
             }
             //down arrow key is pressed
             else if(e.keyCode == arrows.down){
@@ -762,8 +781,15 @@ export default {
 
         validateMailandAccept(targetElementKey){
             if(this.isEmail(this.mailInputs[targetElementKey])){
+                //since this is a new email and not present in contacts
+                //we modify it mock contact object
+                let contact = {
+                    emailAddresses: [
+                        {value: this.mailInputs[targetElementKey]}
+                    ]
+                };
                 //push the value to mailInputarray
-                this.mailInputArray[targetElementKey].push(this.mailInputs[targetElementKey]);
+                this.mailInputArray[targetElementKey].push(contact);
                 this.mailInputs[targetElementKey] = '';
             }
         },
@@ -889,6 +915,21 @@ export default {
             //set the focus to the first label
             let el = window.$("#lbl_id_0").find('a');
             el.focus();
+        },
+
+        editorKeyDown(event){
+
+            if(event.key === "Escape"){
+                this.hasEscPredence = true;
+            }
+            else if(event.key === "Tab"){
+                if(this.hasEscPredence){
+                    //remove focus from quill editor and set to next focusable element
+                    window.$(".common__mail__bottom.d-flex").find('a,button:not(:disabled)')[0].focus();            
+                    //reset hasEscPredence flag
+                    this.hasEscPredence = false;   
+                }
+            }
         }
     }
 }
