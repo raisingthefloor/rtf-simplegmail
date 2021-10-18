@@ -37,18 +37,66 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </a>
                     <span class="logo__title">EasyMail</span>
                 </div>
-                <div class="header__search">
+                <div :class="['header__search dropdown-container', searchKey.length ? 'no-border-bottom-radius' : '']">
                     <button type="button" class="search__button hd-btn">
                         <i class="far fa-search"></i>
                     </button>
-                    <input type="text" placeholder="Search mail">
-                    <button type="button" class="filter__btn hd-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                    <input type="text" v-model="searchKey" placeholder="Search mail">
+                    <button v-show="searchKey.length" type="button" class="filter__btn hd-btn" @click="clearSearchKey"
+                    >
+                        <i class="far fa-times"></i>
+                    </button>
+                    <button type="button" class="filter__btn hd-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
                             height="24" viewBox="0 0 24 24">
                             <path
                                 d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z">
                             </path>
                         </svg>
                     </button>
+
+                    <!--Dropdown Search Result-->
+                    <div v-show="searchKey.length" class="dropdown-content">
+                        <div v-for="n in 5" :key="n" class="search-result-item" role="button">
+
+                            <div class="search-result-icon">
+                                <i class="far fa-search"></i>
+                            </div>
+
+                            <div class="search-result-data">
+                                <table cellpadding="0" cellspacing="0" class="search-result-data">
+                                    <tbody>
+                                        <tr>
+                                            <!--Subject or Contact Name-->
+                                            <td>
+                                                Subject for the searched mail - {{n}}
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <!--Subject or Contact Name-->
+                                            <td>
+                                                contacts or email address of search result        
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="search-result-date">
+                                <table cellpadding="0" cellspacing="0" class="search-result-data">
+                                    <tbody>
+                                        <tr>
+                                            <!--Subject or Contact Name-->
+                                            <td rowspan="2">
+                                                11/10/2001        
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="header__right">
@@ -166,6 +214,15 @@ import {mapState} from "vuex"
                     url = this.profilePicUrl;
                 }
                 return url;
+            },
+
+            searchKey: {
+                get(){
+                    return this.$store.state.searchKey;
+                },
+                set(val){
+                    this.$store.commit('UPDATE_SEARCH_KEY', val);
+                }
             }
         },
 
@@ -178,6 +235,10 @@ import {mapState} from "vuex"
 
             toggleSideMenu(){
                 window.$('.menu__bar , .offcanvas-overlay').toggleClass('show');
+            },
+
+            clearSearchKey(){
+                this.searchKey = '';
             }
 
             /*googleLogoutHandler(){
@@ -200,4 +261,36 @@ import {mapState} from "vuex"
         margin-left:8px;
         font-size: 20px;
     }
+    .dropdown-container{
+        position: relative;
+    }
+    .dropdown-content{
+        min-width: 100%;
+        position: absolute;
+        top: 58px;
+        left:0;
+        background: #f7f7f7;
+        border: 2px solid transparent;
+        min-height: 100px;
+        border-bottom-right-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+    .no-border-bottom-radius{
+        border-bottom-right-radius:0;
+        border-bottom-left-radius: 0;
+    }
+    .search-result-item{
+        display:grid;
+        grid-template-columns: auto 75% auto;
+    }
+    .search-result-item:hover{
+        background: #ddd;
+    }
+    .search-result-icon{
+        padding: 10px 16px;
+    }
+    table.search-result-data > tbody > tr:nth-child(2){
+        font-size:13px;
+        color:#585050;
+    } 
 </style>
