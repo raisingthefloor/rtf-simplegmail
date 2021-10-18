@@ -82,5 +82,6 @@ export default{
         delete: 46
     },
     labelName: '',
-    lastActiveRoute: ''
+    lastActiveRoute: '',
+    searchKey: ''
 }

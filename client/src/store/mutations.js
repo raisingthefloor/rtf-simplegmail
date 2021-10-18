@@ -75,5 +75,10 @@ export default {
             localStorage.setItem('lastActiveRoute', state.lastActiveRoute);    
         }
         
+    },
+
+    //Update Search Key 
+    UPDATE_SEARCH_KEY(state, payload){
+        state.searchKey = payload;
     }
 }
