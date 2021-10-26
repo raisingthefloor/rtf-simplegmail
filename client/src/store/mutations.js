@@ -80,5 +80,10 @@ export default {
     //Update Search Key 
     UPDATE_SEARCH_KEY(state, payload){
         state.searchKey = payload;
+    },
+
+    //Update Search Result
+    UPDATE_SEARCH_RESULT(state, payload){
+        state.searchResults = payload;
     }
 }

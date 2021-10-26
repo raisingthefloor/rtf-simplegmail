@@ -56,8 +56,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </button>
 
                     <!--Dropdown Search Result-->
-                    <div v-show="searchKey.length" class="dropdown-content">
-                        <div v-for="n in 5" :key="n" class="search-result-item" role="button">
+                    <div v-show="searchKey.length && searchResults.length" class="dropdown-content">
+                        <div v-for="result in searchResults" :key="result.id" class="search-result-item" role="button">
 
                             <div class="search-result-icon">
                                 <i class="far fa-search"></i>
@@ -69,14 +69,14 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                         <tr>
                                             <!--Subject or Contact Name-->
                                             <td>
-                                                Subject for the searched mail - {{n}}
+                                                {{getResultSubject(result)}}
                                             </td>
                                         </tr>
 
                                         <tr>
                                             <!--Subject or Contact Name-->
                                             <td>
-                                                contacts or email address of search result        
+                                                {{getResultContacts(result)}}        
                                             </td>
                                         </tr>
                                     </tbody>
@@ -88,8 +88,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                     <tbody>
                                         <tr>
                                             <!--Subject or Contact Name-->
-                                            <td rowspan="2">
-                                                11/10/2001        
+                                            <td rowspan="2" style="word-break: break-word">
+                                                {{getResultDate(result)}}    
                                             </td>
                                         </tr>
                                     </tbody>
@@ -187,11 +187,12 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 </template>
 
 <script>
-import {mapState} from "vuex"
+import {mapState} from "vuex";
+import moment from 'moment';
     export default{
         data(){
             return{
-
+                moment
             };
         },
 
@@ -203,7 +204,7 @@ import {mapState} from "vuex"
         },
 
         computed:{
-            ...mapState(['appActiveUser']),
+            ...mapState(['appActiveUser', 'searchResults']),
 
             profilePictureUrl(){
                 let url = "";
@@ -239,12 +240,43 @@ import {mapState} from "vuex"
 
             clearSearchKey(){
                 this.searchKey = '';
-            }
+            },
 
-            /*googleLogoutHandler(){
-                const auth2Instance = gapi.auth2.getAuthInstance();
-                auth2Instance.signOut();
-            },*/
+            getResultSubject(result){
+                if(result.messages.length){
+                    //getting the latest message in the thread
+                    let message = result.messages[result.messages.length - 1];
+                    let subject = message.payload?.headers?.find(header => header.name.toLowerCase() === "subject")?.value;
+                    return this.$filters.truncatedSubject(subject, 80);
+                }
+                return '';
+            },
+
+            getResultContacts(result){
+                if(result.messages.length){
+                    //getting from and to contact of latest message
+                    let message = result.messages[result.messages.length - 1];
+                    let from = message.payload?.headers?.find(header => header.name.toLowerCase() === "from")?.value,
+                        to = message.payload?.headers?.find(header => header.name.toLowerCase() === "to")?.value;
+                    from = this.$filters.strip_html(from);
+                    from = this.appActiveUser.email === from ? 'me' : from;
+
+                    to = this.$filters.strip_html(to);
+                    to = this.appActiveUser.email === to ? 'me' : to;
+                    return `${from}, ${to}`;
+                }
+                return '';
+            },
+
+            getResultDate(result){
+                if(result.messages.length){
+                    //getting from and to contact of latest message
+                    let message = result.messages[result.messages.length - 1];
+                    let date = message.payload?.headers?.find(header => header.name.toLowerCase() === "date")?.value;
+                    return this.moment(date).format('DD/MM/YY');
+                }
+                return '';
+            }
         }
     }
 </script>
@@ -271,7 +303,6 @@ import {mapState} from "vuex"
         left:0;
         background: #f7f7f7;
         border: 2px solid transparent;
-        min-height: 100px;
         border-bottom-right-radius: 8px;
         border-bottom-left-radius: 8px;
     }
@@ -280,6 +311,7 @@ import {mapState} from "vuex"
         border-bottom-left-radius: 0;
     }
     .search-result-item{
+        padding-bottom: 3px;
         display:grid;
         grid-template-columns: auto 75% auto;
     }

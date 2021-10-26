@@ -54,7 +54,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </p>
                             </div>
                             <div class="nav__btn__top">
-                                <p>RE: {{truncatedSubject(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}} </p>
+                                <p>RE: {{$filters.truncatedSubject(thread.messages[thread.messages.length - 1].payload.headers.find(header => header.name.toLowerCase() == "subject")?.value, 20)}} </p>
                                 <p v-if="thread.messages[thread.messages.length - 1].labelIds.includes('UNREAD')">
                                     <span class="new__message">NEW</span>
                                 </p>
@@ -197,7 +197,7 @@ export default {
     },
 
     computed:{
-        ...mapState(['keyCodes']),
+        ...mapState(['keyCodes', 'searchKey']),
 
         hasMoreThanOneMessages(){
             let thread = this.threads.find(thread => thread.id === this.messageDetails?.threadId);
@@ -216,18 +216,22 @@ export default {
         }
     },
 
-    computed: mapState(['googleCreds']),
+    computed: mapState(['googleCreds']),*/
 
     watch:{
-        googleCreds: {
-            handler(newVal, oldVal){
-                if(newVal.isSignedIn){
-                    this.getInboxMessages();
-                }
-            },
-            deep: true
+        searchKey(newVal){
+            newVal.trim();
+            if(newVal){
+                newVal.toLowerCase();
+                //filter the threads/messages based on searchKey
+                this.generateSearchResult(newVal);
+            }
+            else{
+                //if search key is not present we flush the existing search results
+                this.$store.commit('UPDATE_SEARCH_RESULT', []);
+            }
         }
-    },*/ 
+    },
     methods:{
         /*getInboxMessages(){
             this.messages = [];
@@ -295,17 +299,6 @@ export default {
                 .catch(err => {
                     Sentry.captureException(err);
                 })
-        },
-
-        truncatedSubject(subject){
-            if(typeof subject !== "string") return '';
-
-            const maxLength = 20;
-            //truncate subject if it exceeds the given maxLength
-            if(subject.length > maxLength){
-                return subject.slice(0, maxLength) + " ...";
-            }
-            return subject;
         },
 
         getMessageDetails(messageId){
@@ -431,6 +424,37 @@ export default {
         hideRelatedEmails(){
             this.showThreadUI = false;
             this.messageDetails = this.lastDisplayedMsgDetails;
+        },
+
+        generateSearchResult(searchKey){
+            let results = this.threads.filter(thread => {
+                let matched = false;
+                if(thread.threadSnippet && thread.threadSnippet.toLowerCase().includes(searchKey)){
+                    //search key matches thread Snipper
+                    matched = true;
+                }
+                else if(thread.messages.length){
+                    for(const msg of thread.messages){
+                        if(msg.snippet.toLowerCase().includes(searchKey) || this.matchesHeaders(searchKey, msg)){
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+                return matched;
+            });
+
+            //update the store with returned search results
+            this.$store.commit('UPDATE_SEARCH_RESULT', results);
+        },
+
+        matchesHeaders(searchKey, msg){
+            if(msg.payload && (msg.payload.headers?.find(header => header.name.toLowerCase() === "subject")?.value.toLowerCase().includes(searchKey) 
+                || msg.payload.headers?.find(header => header.name.toLowerCase() === "to")?.value.toLowerCase().includes(searchKey))
+                || msg.payload.headers?.find(header => header.name.toLowerCase() === "from")?.value.toLowerCase().includes(searchKey)){
+                return true;
+            }
+            return false;
         }
 
         /*setCurrentThreadMsgs(){

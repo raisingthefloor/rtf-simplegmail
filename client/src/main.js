@@ -41,7 +41,17 @@ app.config.globalProperties.$filters = {
       str = str.toString();
       return str.replace(/<[^>]*>/g, '').trim();
     }   
-  }
+  },
+
+  truncatedSubject(subject, maxLength){
+    if(typeof subject !== "string") return '';
+    
+    //truncate subject if it exceeds the given maxLength
+    if(subject.length > maxLength){
+      return subject.slice(0, maxLength) + " ...";
+    }
+    return subject;
+  },
 };
 
 Sentry.init({

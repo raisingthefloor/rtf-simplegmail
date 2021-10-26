@@ -83,5 +83,9 @@ export default{
     },
     labelName: '',
     lastActiveRoute: '',
-    searchKey: ''
+    searchKey: '',
+    /**an array containing result objects based on search key
+     * result object can be an instance of message or a contact
+     */
+    searchResults: []
 }
