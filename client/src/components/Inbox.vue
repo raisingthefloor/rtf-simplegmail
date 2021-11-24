@@ -139,7 +139,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     <h5>EMAILS IN THIS CONVERSATION</h5>
                 </div>
 
-                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <div class="nav nav-tabs" id="nav-tab" role="tablist" v-if="messages.length">
                     <button v-for="(message, index) in messages" :key="index" :class="['nav-link', message.id === messageDetails?.id ? 'active' : '']" :id="`nav-contact-tab-${index}`" data-bs-toggle="tab" data-bs-target="#nav-contact2" type="button" role="tab" aria-controls="nav-contact2" aria-selected="false" @click="getMessageDetails(message.id)"
                     >
                         <div class="nav__btn__content">
@@ -149,7 +149,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <p class="date">{{moment(+message.internalDate)?.format('DD/MM/YY')}}</p>
                             </div>
 
-                            <p>{{truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value)}}</p>
+                            <p>{{$filters.truncatedSubject(message.payload.headers.find(header => header.name.toLowerCase() == "subject")?.value, 20)}}</p>
                         </div>
                     </button>
                 </div>
