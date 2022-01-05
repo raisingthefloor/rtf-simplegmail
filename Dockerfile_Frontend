@@ -1,5 +1,5 @@
 #!/bin/bash
-FROM node:latest
+FROM node:12
 WORKDIR /usr/src/app/simplegmail_frontend
 
 COPY client/package*.json ./

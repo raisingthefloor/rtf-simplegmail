@@ -1,5 +1,5 @@
 #!/bin/bash
-FROM node:latest
+FROM node:12
 # Create app directory
 WORKDIR /usr/src/app/simplegmail_backend
 # Install app dependencies
