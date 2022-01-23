@@ -97,6 +97,150 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                             </div>
                         </div>
                     </div>
+
+                    <!--Advanced Search Filter-->
+                    <div class="advanced-search dropdown-content p-3">
+                        <div class="row">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="from" class="label-txt fs-6">From</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <input name="from" id="from" />
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="to" class="label-txt fs-6">To</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <input name="to" id="to" />
+                            </div>
+                        </div>
+
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="subject" class="label-txt fs-6">Subject</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <input name="subject" id="subject" />
+                            </div>
+                        </div>
+
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="has-the-words" class="label-txt fs-6">Has the words</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <input name="has_the_words" id="has-the-words" />
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="does-not-have" class="label-txt fs-6">Doesn't have</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <input name="does_not_have" id="does-not-have" />
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="size" class="label-txt fs-6">Size</label>
+                            </div>
+                            <div class="col-xs-5 col-md-5">
+                                <select>
+                                    <option selected></option>
+                                    <option value="greater_than">greater than</option>
+                                    <option value="less_than">less than</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-1 col-md-2">
+                                <input name="size" id="size" />
+                            </div>
+                            <div class="col-xs-1 col-md-2">
+                                <select>
+                                    <option selected></option>
+                                    <option value="mb">MB</option>
+                                    <option value="kb">KB</option>
+                                    <option value="bytes">Bytes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-xs-4 col-md-3 pt-2">
+                                <label for="date" class="label-txt fs-6">Date within</label>
+                            </div>
+                            <div class="col-xs-5 col-md-5">
+                                <select>
+                                    <option selected></option>
+                                    <option>1 day</option>
+                                    <option>3 days</option>
+                                    <option>1 week</option>
+                                    <option>2 weeks</option>
+                                    <option>1 month</option>
+                                    <option>2 months</option>
+                                    <option>6 months</option>
+                                    <option>1 year</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-3 col-md-4">
+                                <input type="date" name="date" id="date" />
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="col-xs-5 col-md-3 pt-2">
+                                <label for="search-in" class="label-txt fs-6">Search</label>
+                            </div>
+                            <div class="col-xs-7 col-md-9">
+                                <select name="search_in" id="search-in" class="px-1">
+                                    <option></option>
+                                    <option>All mail</option>
+                                    <option>Inbox</option>
+                                    <option>Sent</option>
+                                    <option>Drafts</option>
+                                    <option>Spam</option>
+                                    <option>Trash</option>
+
+                                    <option value="">________________________________________________________________________</option>
+
+                                    <option>Mail &nbsp; Spam &nbsp; Trash </option>
+
+                                    <option value="">________________________________________________________________________</option>
+
+                                    <option>Read Mail</option>
+                                    <option>Unread Mail</option>
+
+                                    <option value="">________________________________________________________________________</option>
+
+                                    <option>User defined labels</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row pt-3">
+                            <div class="col-md-1 px-0">
+                                <input type="checkbox" id="has-attachment"/>
+                            </div>
+                            <div class="col-md-11 px-0">
+                                <label for="has-attachment" class="label-txt">Has attachment</label>
+                            </div>
+                        </div>
+
+                        <div class="row pt-2">
+                            <div class="text-end col-md-10">
+                                <button type="button" class="btn btn-light">Clear Filter</button>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-primary">Search</button>
+                            </div>    
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="header__right">
@@ -324,5 +468,27 @@ import moment from 'moment';
     table.search-result-data > tbody > tr:nth-child(2){
         font-size:13px;
         color:#585050;
-    } 
+    }
+    .label-txt {
+        color: #585050;
+    }
+    .advanced-search input {
+        border-bottom: 1px solid black;
+        margin: 0;
+        padding: 0;
+        height: 30px;
+    }
+    .advanced-search select {
+        width: 100%;
+        height: 28px;
+        border: none;
+        border-bottom: 1px solid black;
+        background: transparent;
+        outline: none;
+        padding: 0;
+        margin: 0;
+    }
+    .advanced-search input[type="checkbox"] {
+        height: 15px;
+    }
 </style>
