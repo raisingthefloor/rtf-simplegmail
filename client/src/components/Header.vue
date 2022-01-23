@@ -46,7 +46,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     >
                         <i class="far fa-times"></i>
                     </button>
-                    <button type="button" class="filter__btn hd-btn">
+                    <button type="button" class="filter__btn hd-btn" @click="toggleAdvancedFilter">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24"
                             height="24" viewBox="0 0 24 24">
                             <path
@@ -99,7 +99,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                     </div>
 
                     <!--Advanced Search Filter-->
-                    <div class="advanced-search dropdown-content p-3">
+                    <div v-show="showAdvancedFilter" class="advanced-search dropdown-content p-3">
                         <div class="row">
                             <div class="col-xs-5 col-md-3 pt-2">
                                 <label for="from" class="label-txt fs-6">From</label>
@@ -336,7 +336,8 @@ import moment from 'moment';
     export default{
         data(){
             return{
-                moment
+                moment,
+                showAdvancedFilter: false
             };
         },
 
@@ -420,6 +421,10 @@ import moment from 'moment';
                     return this.moment(date).format('DD/MM/YY');
                 }
                 return '';
+            },
+
+            toggleAdvancedFilter(){
+                this.showAdvancedFilter = !this.showAdvancedFilter;
             }
         }
     }
