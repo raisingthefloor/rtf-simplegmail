@@ -47,6 +47,11 @@ const routes = [
                 path: "/:label/thread/:id",
                 name: "ThreadView",
                 component: () => import('../components/ThreadView.vue')
+            },
+            {
+                path: "/search",
+                name: "SearhResultView",
+                component: () => import('../components/SearhResultView.vue')
             }
         ]
     },

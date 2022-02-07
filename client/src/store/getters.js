@@ -32,5 +32,13 @@ export default{
         state.lastActiveRoute = localStorage.getItem('lastActiveRoute');
         return ((!state.lastActiveRoute || state.lastActiveRoute == '/') ? 
             state.lastActiveRoute = '/inbox' : state.lastActiveRoute);
+    },
+
+    searchResults: state => {
+        return state.searchResults
+    },
+
+    selectedSearchResult: state => {
+        return state.selectedSearchResult
     }
 }

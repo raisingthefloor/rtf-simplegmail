@@ -29,30 +29,11 @@ import App from './App.vue';
 import router from './router';
 import * as Sentry from "@sentry/vue";
 import { Integrations } from "@sentry/tracing";
+import { globalFilters } from './global-filters';
 
 const app = createApp(App);
 //Adding a global filter
-app.config.globalProperties.$filters = {
-  strip_html(str){
-    if ((str===null) || (str==='') || str === undefined){
-      return '';
-    } 
-    else{
-      str = str.toString();
-      return str.replace(/<[^>]*>/g, '').trim();
-    }   
-  },
-
-  truncatedSubject(subject, maxLength){
-    if(typeof subject !== "string") return '';
-    
-    //truncate subject if it exceeds the given maxLength
-    if(subject.length > maxLength){
-      return subject.slice(0, maxLength) + " ...";
-    }
-    return subject;
-  },
-};
+app.config.globalProperties.$filters = globalFilters
 
 Sentry.init({
     app,
