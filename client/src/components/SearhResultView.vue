@@ -396,7 +396,7 @@ export default {
           this.loading = false;
         })
         .catch((err) => {
-          Sentry.captureException(err);
+          console.log(err)
         });
     },
 
