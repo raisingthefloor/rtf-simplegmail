@@ -87,5 +87,29 @@ export default{
     /**an array containing result objects based on search key
      * result object can be an instance of message or a contact
      */
-    searchResults: []
+    searchResults: [],
+    // an array of search result selected by user based on filters
+    selectedSearchResult: [],
+    // Advanced Search Params
+    advancedSearchParams: {
+        from: '',
+        to: '',
+        subject: '',
+        wordsIncluded: '',
+        wordsExcluded: '',
+        size: {
+            comparisonLevel: '',
+            value: '',
+            unit: ''
+        },
+        dateRange: {
+            from: '',
+            within: ''
+        },
+        searchIn: '',
+        hasAttachment: false
+    },
+
+    //advance search result
+    advanceSearchResult: []
 }

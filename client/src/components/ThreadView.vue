@@ -1,5 +1,6 @@
 <template>
-	<div class="common__area" v-if="messages.length">
+	<div>
+		<div class="common__area" v-if="messages.length">
         <div class="common__tab__area diff emails--in--this--conversation" >
             <div class="tab-content" id="nav-tabContent" v-if="messageDetails && !loading">       
 				<div class="tab-pane fade active show" role="tabpanel" aria-labelledby="nav-contact-tab2"> 
@@ -93,6 +94,8 @@
 	<div class="common__area" v-if="loading && !messages.length">
 		<div class="loader"></div>
 	</div>
+	</div>
+	
 </template>
 
 <script>
@@ -138,7 +141,7 @@ import moment from 'moment';
 						if(!payload.data.error){
 							this.messageDetails = payload.data.data;
 							if(this.messageDetails.decoded_attachments?.length){
-								let parsedAttachment = this.parseAttachments(this.messageDetails.decoded_attachments);
+								let parsedAttachment = this.$filters.parseAttachments(this.messageDetails.decoded_attachments);
 								if(this.messageDetails.decoded_parts){
 									this.messageDetails.decoded_parts[0] += parsedAttachment;
 								}

@@ -173,6 +173,8 @@ import * as Sentry from "@sentry/vue";
 import moment from 'moment';
 import axios from 'axios';
 import { mapState } from 'vuex';
+import eventBus from "../eventBus"
+
 /*import {Buffer} from 'buffer/';*/
 
 export default {
@@ -186,18 +188,26 @@ export default {
             loading: false,
             currentIndex: 0,
             showThreadUI: false,
-            lastDisplayedMsgDetails: null
+            lastDisplayedMsgDetails: null,
+            userSelectedFilters: {}
         }
     },
 
     created(){
         //this.getInboxMessages();
-        this.getThreads();
+        this.initInbox();
         //this.getThreadMessages();
+
+        // register event listener for advance search
+        eventBus.$on('perform-advance-search', this.performAdvanceSearchHandler)
+    },
+
+    beforeUnmount() {
+        eventBus.$off('perform-advance-search', this.performAdvanceSearchHandler)
     },
 
     computed:{
-        ...mapState(['keyCodes', 'searchKey']),
+        ...mapState(['keyCodes', 'searchKey', 'advancedSearchParams']),
 
         hasMoreThanOneMessages(){
             let thread = this.threads.find(thread => thread.id === this.messageDetails?.threadId);
@@ -221,33 +231,20 @@ export default {
     watch:{
         searchKey(newVal){
             newVal.trim();
+            let results = []
             if(newVal){
                 newVal.toLowerCase();
                 //filter the threads/messages based on searchKey
-                this.generateSearchResult(newVal);
+                results = this.generateSearchResult(newVal);    
             }
-            else{
-                //if search key is not present we flush the existing search results
-                this.$store.commit('UPDATE_SEARCH_RESULT', []);
-            }
+            //update the store with returned search results
+            this.$store.commit('UPDATE_SEARCH_RESULT', results);
         }
     },
     methods:{
-        /*getInboxMessages(){
-            this.messages = [];
-            this.loading = true;
-            axios.get(`api/users/me/messages/inbox?nextPage=${this.nextPageToken}`)
-                .then(payload => {
-                    if(!payload.data.error){
-                        this.messages = payload.data.data;
-                        this.nextPageToken = payload.data.nextPageToken;
-                    }
-                    this.loading = false;
-                })
-                .catch(err => {
-                    Sentry.captureException(err);
-                });
-        },*/
+        initInbox() {
+            this.getThreads();            
+        },
 
         moveToTrash(messageId){
             if(confirm("Are you sure you want to send this mail to Trash?")){
@@ -308,7 +305,7 @@ export default {
                     if(!payload.data.error){
                         this.messageDetails = payload.data.data;
                         if(this.messageDetails.decoded_attachments?.length){
-                            let parsedAttachment = this.parseAttachments(this.messageDetails.decoded_attachments);
+                            let parsedAttachment = this.$filters.parseAttachments(this.messageDetails.decoded_attachments);
                             if(this.messageDetails.decoded_parts){
                                 this.messageDetails.decoded_parts[0] += parsedAttachment;
                             }
@@ -328,49 +325,6 @@ export default {
             this.messageDetails = null;
             let activeElement = document.querySelector('.nav-link.active');
             activeElement.classList.remove('active');
-        },
-
-        parseAttachments(decodedAttachments){
-            let attachmentHTML = "";
-            for(let attachment of decodedAttachments){
-                if (attachment.attachment_data.data.length > 0)
-                {
-                    let dataBase64Rep = attachment.attachment_data.data.replace(/-/g, '+').replace(/_/g, '/');
-                    let urlBlob = this.b64toBlob(dataBase64Rep, attachment.mimeType, attachment.attachment_data.size);
-
-                    attachmentHTML += `<a href="`+urlBlob+`" download="`+attachment.filename+`"> <div style="margin-top: 0.5rem; padding: 0.3rem; border: 1px solid #ccc; cursor: pointer;">
-                    `+attachment.filename+`
-                    </div></a>`
-                    //URL.revokeObjectURL(urlBlob)
-                }
-            }
-            
-            return attachmentHTML;
-        },
-
-        b64toBlob (b64Data, contentType, sliceSize) {
-            contentType = contentType || ''
-            sliceSize = sliceSize || 512
-
-            var byteCharacters = atob(b64Data)
-            var byteArrays = []
-
-            for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-                var slice = byteCharacters.slice(offset, offset + sliceSize)
-
-                var byteNumbers = new Array(slice.length)
-                for (var i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i)
-                }
-
-                var byteArray = new Uint8Array(byteNumbers)
-
-                byteArrays.push(byteArray)
-
-            }
-            var blob = new Blob(byteArrays, {type: contentType})
-            let urlBlob = URL.createObjectURL(blob)
-            return urlBlob
         },
 
         setCurrentIndex(index){
@@ -427,7 +381,8 @@ export default {
         },
 
         generateSearchResult(searchKey){
-            let results = this.threads.filter(thread => {
+            searchKey = searchKey.toLowerCase()
+            const results = this.threads.filter(thread => {
                 let matched = false;
                 if(thread.threadSnippet && thread.threadSnippet.toLowerCase().includes(searchKey)){
                     //search key matches thread Snipper
@@ -444,8 +399,7 @@ export default {
                 return matched;
             });
 
-            //update the store with returned search results
-            this.$store.commit('UPDATE_SEARCH_RESULT', results);
+            return results
         },
 
         matchesHeaders(searchKey, msg){
@@ -455,6 +409,103 @@ export default {
                 return true;
             }
             return false;
+        },
+
+        performAdvanceSearchHandler(){
+            // check if advance search params are set
+            if (this.isAdvanceSearchParamSet()) {
+                // reset user selected filter object on every search click
+                this.userSelectedFilters = {}
+                this.setUserSelectedFilters(this.advancedSearchParams)
+                // generate advanced search result
+                this.generateAdvanceSearchResult()
+            }
+        },
+
+        isAdvanceSearchParamSet() {
+            return this.isParamSet(this.advancedSearchParams)
+        },
+
+        isParamSet(paramObj) {
+            const primitives = ['string', 'number', 'boolean']
+            for (const key in paramObj) {
+                const isPrimitive = primitives.includes(typeof paramObj[key])
+                if (isPrimitive && Boolean(paramObj[key])) {
+                    return true
+                }
+                else if(Object.keys(paramObj[key]).length){
+                    return this.isParamSet(paramObj[key])
+                }
+            }
+
+            return false
+        },
+
+        generateAdvanceSearchResult() {
+            const userSelectedFilters = Object.keys(this.userSelectedFilters);
+            const result = this.threads.filter(thread => {
+                const filterMapBoolean = userSelectedFilters.map(filterKey => {
+                    let result = false;
+
+                    // check for email headers match
+                    if (["from", "to", "subject"].includes(filterKey) && thread.messages.length) {
+                        for (const msg of thread.messages) {
+                            if (this.matchesHeaderKey(filterKey, this.advancedSearchParams[filterKey], msg)) {
+                                result = true
+                                break
+                            }
+                        }
+                    }
+                    
+                    // check if email includes the words
+                    if (filterKey === "wordsIncluded") {
+                        if (thread.threadSnippet.toLowerCase().includes(filterKey)) {
+                            result = true;
+                        }
+                        
+                        if (thread.messages.length) {
+                            for(const msg of thread.messages){
+                                if(
+                                    msg.snippet.toLowerCase().includes(this.advancedSearchParams[filterKey])
+                                    || this.matchesHeaderKey(filterKey, this.advancedSearchParams[filterKey], msg)
+                                ){
+                                    result = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    return result
+                })
+                
+                return filterMapBoolean.every(filterBool => filterBool === true)
+            })
+
+            console.log(result)
+        },
+
+        matchesHeaderKey(key, value, haystack) {
+            if (haystack.payload && (haystack.payload.headers?.
+                find(header => header.name.toLowerCase() === key)?.value.toLowerCase().includes(value.toLowerCase()))) {
+                    return true
+            }
+
+            return false
+        },
+
+        setUserSelectedFilters (subjectObj) {
+            const primitives = ['string', 'number', 'boolean']
+            for (const key in subjectObj) {
+                const isPrimitive = primitives.includes(typeof subjectObj[key])
+                // is  primitive and is set directly add the key
+                if (isPrimitive && Boolean(subjectObj[key])) {
+                    Object.assign(this.userSelectedFilters, {[key]: subjectObj[key]})
+                }
+                else if (!isPrimitive && this.isParamSet(subjectObj[key])) {
+                    Object.assign(this.userSelectedFilters, {[key]: subjectObj[key]})
+                }
+            }
         }
 
         /*setCurrentThreadMsgs(){

@@ -85,5 +85,30 @@ export default {
     //Update Search Result
     UPDATE_SEARCH_RESULT(state, payload){
         state.searchResults = payload;
+    },
+
+    UPDATE_SELECTED_SEARCH_RESULT(state, payload){
+        state.selectedSearchResult = Array.isArray(payload) ? payload : [payload];
+    },
+
+    CLEAR_ADVANCE_FILTER(state) {
+        state.advancedSearchParams = {
+            from: '',
+            to: '',
+            subject: '',
+            wordsIncluded: '',
+            wordsExcluded: '',
+            size: {
+                comparisonLevel: '',
+                value: '',
+                unit: ''
+            },
+            dateRange: {
+                from: '',
+                within: ''
+            },
+            searchIn: '',
+            hasAttachment: false
+        }
     }
 }

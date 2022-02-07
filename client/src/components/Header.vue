@@ -47,17 +47,25 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                         <i class="far fa-times"></i>
                     </button>
                     <button type="button" class="filter__btn hd-btn" @click="toggleAdvancedFilter">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                        <svg v-if="!showAdvancedFilter" xmlns="http://www.w3.org/2000/svg" width="24"
                             height="24" viewBox="0 0 24 24">
                             <path
                                 d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z">
                             </path>
                         </svg>
+
+                        <i v-else class="far fa-times"></i>
                     </button>
 
                     <!--Dropdown Search Result-->
                     <div v-show="searchKey.length && searchResults.length" class="dropdown-content">
-                        <div v-for="result in searchResults" :key="result.id" class="search-result-item" role="button">
+                        <div
+                            v-for="result in searchResults"
+                            :key="result.id"
+                            class="search-result-item"
+                            role="button"
+                            @click="selectSearchResult(result)"
+                        >
 
                             <div class="search-result-icon">
                                 <i class="far fa-search"></i>
@@ -105,7 +113,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="from" class="label-txt fs-6">From</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <input name="from" id="from" />
+                                <input name="from" id="from" v-model="advancedSearchParams.from" />
                             </div>
                         </div>
 
@@ -114,7 +122,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="to" class="label-txt fs-6">To</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <input name="to" id="to" />
+                                <input name="to" id="to" v-model="advancedSearchParams.to" />
                             </div>
                         </div>
 
@@ -124,7 +132,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="subject" class="label-txt fs-6">Subject</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <input name="subject" id="subject" />
+                                <input name="subject" id="subject" v-model="advancedSearchParams.subject" />
                             </div>
                         </div>
 
@@ -134,7 +142,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="has-the-words" class="label-txt fs-6">Has the words</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <input name="has_the_words" id="has-the-words" />
+                                <input name="has_the_words" id="has-the-words" v-model="advancedSearchParams.wordsIncluded" />
                             </div>
                         </div>
 
@@ -143,7 +151,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="does-not-have" class="label-txt fs-6">Doesn't have</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <input name="does_not_have" id="does-not-have" />
+                                <input name="does_not_have" id="does-not-have" v-model="advancedSearchParams.wordsExcluded" />
                             </div>
                         </div>
 
@@ -152,17 +160,17 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="size" class="label-txt fs-6">Size</label>
                             </div>
                             <div class="col-xs-5 col-md-5">
-                                <select>
+                                <select v-model="advancedSearchParams.size.comparisonLevel">
                                     <option selected></option>
                                     <option value="greater_than">greater than</option>
                                     <option value="less_than">less than</option>
                                 </select>
                             </div>
                             <div class="col-xs-1 col-md-2">
-                                <input name="size" id="size" />
+                                <input name="size" id="size" v-model="advancedSearchParams.size.value" />
                             </div>
                             <div class="col-xs-1 col-md-2">
-                                <select>
+                                <select v-model="advancedSearchParams.size.unit">
                                     <option selected></option>
                                     <option value="mb">MB</option>
                                     <option value="kb">KB</option>
@@ -176,7 +184,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="date" class="label-txt fs-6">Date within</label>
                             </div>
                             <div class="col-xs-5 col-md-5">
-                                <select>
+                                <select v-model="advancedSearchParams.dateRange.within">
                                     <option selected></option>
                                     <option>1 day</option>
                                     <option>3 days</option>
@@ -189,7 +197,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 </select>
                             </div>
                             <div class="col-xs-3 col-md-4">
-                                <input type="date" name="date" id="date" />
+                                <input type="date" name="date" id="date" v-model="advancedSearchParams.dateRange.from" />
                             </div>
                         </div>
 
@@ -198,7 +206,9 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
                                 <label for="search-in" class="label-txt fs-6">Search</label>
                             </div>
                             <div class="col-xs-7 col-md-9">
-                                <select name="search_in" id="search-in" class="px-1">
+                                <select name="search_in" id="search-in" class="px-1"
+                                    v-model="advancedSearchParams.searchIn"
+                                >
                                     <option></option>
                                     <option>All mail</option>
                                     <option>Inbox</option>
@@ -225,7 +235,7 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
                         <div class="row pt-3">
                             <div class="col-md-1 px-0">
-                                <input type="checkbox" id="has-attachment"/>
+                                <input type="checkbox" id="has-attachment" v-model="advancedSearchParams.hasAttachment" />
                             </div>
                             <div class="col-md-11 px-0">
                                 <label for="has-attachment" class="label-txt">Has attachment</label>
@@ -234,10 +244,16 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 
                         <div class="row pt-2">
                             <div class="text-end col-md-10">
-                                <button type="button" class="btn btn-light">Clear Filter</button>
+                                <button type="button" class="btn btn-light" @click="clearAdvancedFilter">Clear Filter</button>
                             </div>
                             <div class="col-md-1">
-                                <button type="button" class="btn btn-primary">Search</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    @click="performAdvanceSearch"
+                                >
+                                    Search
+                                </button>
                             </div>    
                         </div>
                     </div>
@@ -333,6 +349,8 @@ agreement nos. 289016 (Cloud4all) and 610510 (Prosperity4All)
 <script>
 import {mapState} from "vuex";
 import moment from 'moment';
+import eventBus from "../eventBus";
+
     export default{
         data(){
             return{
@@ -349,7 +367,7 @@ import moment from 'moment';
         },
 
         computed:{
-            ...mapState(['appActiveUser', 'searchResults']),
+            ...mapState(['appActiveUser', 'searchResults', 'advancedSearchParams']),
 
             profilePictureUrl(){
                 let url = "";
@@ -425,7 +443,21 @@ import moment from 'moment';
 
             toggleAdvancedFilter(){
                 this.showAdvancedFilter = !this.showAdvancedFilter;
-            }
+            },
+
+            clearAdvancedFilter() {
+                this.$store.commit('CLEAR_ADVANCE_FILTER')
+            },
+
+            selectSearchResult(result) {
+                this.$store.commit('UPDATE_SELECTED_SEARCH_RESULT', result)
+                this.$router.push(`/search?key=${this.searchKey}`)
+                this.searchKey = ''
+            },
+
+            performAdvanceSearch() {
+                eventBus.$emit('perform-advance-search')
+            },
         }
     }
 </script>
