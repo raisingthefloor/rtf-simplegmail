@@ -456,6 +456,7 @@ import eventBus from "../eventBus";
             },
 
             performAdvanceSearch() {
+                this.showAdvancedFilter = false;
                 eventBus.$emit('perform-advance-search')
             },
         }

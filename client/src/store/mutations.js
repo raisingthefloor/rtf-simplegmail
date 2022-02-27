@@ -110,5 +110,9 @@ export default {
             searchIn: '',
             hasAttachment: false
         }
+    },
+
+    UPDATE_ADVANCE_SEARCH_RESULT(state, payload) {
+        state.advanceSearchResult = payload
     }
 }

@@ -346,7 +346,7 @@ export default {
 
   // computed properties
   computed: {
-    ...mapGetters(["selectedSearchResult", "lastActiveRoute"]),
+    ...mapGetters(["selectedSearchResult", "lastActiveRoute", "advanceSearchResult"]),
 
     hasMoreThanOneMessages() {
       let thread = this.threads.find(
@@ -369,6 +369,9 @@ export default {
       if (this.selectedSearchResult.length) {
         // display result if state contains it
         this.threads = this.selectedSearchResult;
+      } else if (this.advanceSearchResult.length) {
+        this.threads = this.advanceSearchResult;
+        console.log(this.thread, this.advanceSearchResult)
       } else {
         // redirect to last active route
         this.$router.replace({ path: this.lastActiveRoute });
