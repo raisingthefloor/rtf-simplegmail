@@ -443,7 +443,7 @@ export default {
 
         generateAdvanceSearchResult() {
             const userSelectedFilters = Object.keys(this.userSelectedFilters);
-            const result = this.threads.filter(thread => {
+            const filteredResult = this.threads.filter(thread => {
                 const filterMapBoolean = userSelectedFilters.map(filterKey => {
                     let result = false;
 
@@ -475,6 +475,46 @@ export default {
                             }
                         }
                     }
+                    
+                    // check if email size matches the set params
+                    if (filterKey === "size") {
+                        if (this.advancedSearchParams[filterKey].comparisonLevel === "greater_than") {
+                            switch(this.advancedSearchParams[filterKey].unit) {
+                                case "mb": {
+                                    result = this.matchesSizeParam({
+                                        level: 'greater_than',
+                                        thread,
+                                        sizeUnit: 'mb'
+                                    })
+                                    
+                                    break;
+                                }
+
+                                case "kb": {
+                                    result = this.matchesSizeParam({
+                                        level: 'greater_than',
+                                        thread,
+                                        sizeUnit: 'kb'
+                                    });
+                                    
+                                    break;
+                                }
+
+                                default: {
+                                    result = this.matchesSizeParam({
+                                        level: 'greater_than',
+                                        thread,
+                                        sizeUnit: 'bytes'
+                                    });
+
+                                    break;
+                                }
+
+                            }
+                        } else if (this.advancedSearchParams[filterKey].comparisonLevel === "less_than") {
+                            console.log("2")
+                        }
+                    }
 
                     return result
                 })
@@ -482,7 +522,14 @@ export default {
                 return filterMapBoolean.every(filterBool => filterBool === true)
             })
 
-            console.log(result)
+            if (filteredResult.length) {
+                this.$store.commit('UPDATE_ADVANCE_SEARCH_RESULT', filteredResult);
+                this.$store.commit('CLEAR_ADVANCE_FILTER')
+                this.$router.push(`search?advance=true`)
+            }
+            else {
+                alert("No result matches found for your filter!")
+            }
         },
 
         matchesHeaderKey(key, value, haystack) {
@@ -504,6 +551,32 @@ export default {
                 }
                 else if (!isPrimitive && this.isParamSet(subjectObj[key])) {
                     Object.assign(this.userSelectedFilters, {[key]: subjectObj[key]})
+                }
+            }
+        },
+
+        matchesSizeParam({level, thread, sizeUnit}) {
+            let size = this.advancedSearchParams.size.value;
+            if (sizeUnit === "mb") size = size * 1000_000;
+            if (sizeUnit === "kb") size = size * 1000;
+            console.log(size)
+            // check for greater_than
+            if (level === "greater_than") {
+                // check if thread messages match the size
+                if (thread.messages.length > 0) {
+                    for (const msg of thread.messages) {
+                        if (msg.sizeEstimate > size) {
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                if (thread.messages.length > 0) {
+                    for (const msg of thread.messages) {
+                        if (msg.sizeEstimate <= size) {
+                            return true;
+                        }
+                    }
                 }
             }
         }

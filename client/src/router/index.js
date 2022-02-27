@@ -50,8 +50,8 @@ const routes = [
             },
             {
                 path: "/search",
-                name: "SearhResultView",
-                component: () => import('../components/SearhResultView.vue')
+                name: "SearchResultView",
+                component: () => import('../components/SearchResultView.vue')
             }
         ]
     },

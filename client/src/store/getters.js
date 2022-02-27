@@ -40,5 +40,9 @@ export default{
 
     selectedSearchResult: state => {
         return state.selectedSearchResult
+    },
+
+    advanceSearchResult: state => {
+        return state.advanceSearchResult
     }
 }
