@@ -371,7 +371,6 @@ export default {
         this.threads = this.selectedSearchResult;
       } else if (this.advanceSearchResult.length) {
         this.threads = this.advanceSearchResult;
-        console.log(this.thread, this.advanceSearchResult)
       } else {
         // redirect to last active route
         this.$router.replace({ path: this.lastActiveRoute });

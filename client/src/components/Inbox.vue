@@ -423,22 +423,26 @@ export default {
         },
 
         isAdvanceSearchParamSet() {
-            return this.isParamSet(this.advancedSearchParams)
+            let isAnyParamSet = false;
+            for (const key in this.advancedSearchParams) {
+                if (this.isParamSet(this.advancedSearchParams[key])) {
+                    isAnyParamSet = true;
+                    break;
+                }
+            }
+            return isAnyParamSet;
         },
 
         isParamSet(paramObj) {
             const primitives = ['string', 'number', 'boolean']
-            for (const key in paramObj) {
-                const isPrimitive = primitives.includes(typeof paramObj[key])
-                if (isPrimitive && Boolean(paramObj[key])) {
-                    return true
-                }
-                else if(Object.keys(paramObj[key]).length){
-                    return this.isParamSet(paramObj[key])
+            const isPrimitive = primitives.includes(typeof paramObj);
+            if (isPrimitive && Boolean(paramObj)) {
+                return true;
+            } else {
+                for (const key in paramObj) {
+                    return this.isParamSet(paramObj[key]);
                 }
             }
-
-            return false
         },
 
         generateAdvanceSearchResult() {
@@ -448,7 +452,7 @@ export default {
                     let result = false;
 
                     // check for email headers match
-                    if (["from", "to", "subject"].includes(filterKey) && thread.messages.length) {
+                    if (["from", "to", "subject"].includes(filterKey) && thread.messages.length > 0) {
                         for (const msg of thread.messages) {
                             if (this.matchesHeaderKey(filterKey, this.advancedSearchParams[filterKey], msg)) {
                                 result = true
@@ -478,45 +482,90 @@ export default {
                     
                     // check if email size matches the set params
                     if (filterKey === "size") {
+                        let sizeCriteria = {
+                            level: '',
+                            thread,
+                            sizeUnit: 'bytes'
+                        };
+                        
                         if (this.advancedSearchParams[filterKey].comparisonLevel === "greater_than") {
-                            switch(this.advancedSearchParams[filterKey].unit) {
-                                case "mb": {
-                                    result = this.matchesSizeParam({
-                                        level: 'greater_than',
-                                        thread,
-                                        sizeUnit: 'mb'
-                                    })
-                                    
-                                    break;
-                                }
-
-                                case "kb": {
-                                    result = this.matchesSizeParam({
-                                        level: 'greater_than',
-                                        thread,
-                                        sizeUnit: 'kb'
-                                    });
-                                    
-                                    break;
-                                }
-
-                                default: {
-                                    result = this.matchesSizeParam({
-                                        level: 'greater_than',
-                                        thread,
-                                        sizeUnit: 'bytes'
-                                    });
-
-                                    break;
-                                }
-
+                            sizeCriteria = {
+                                ...sizeCriteria,
+                                level: this.advancedSearchParams[filterKey].comparisonLevel
                             }
                         } else if (this.advancedSearchParams[filterKey].comparisonLevel === "less_than") {
-                            console.log("2")
+                            sizeCriteria = {
+                                ...sizeCriteria,
+                                level: this.advancedSearchParams[filterKey].comparisonLevel
+                            }
+                        }
+
+                        switch(this.advancedSearchParams[filterKey].unit) {
+                            case "mb": {
+                                sizeCriteria = {
+                                    ...sizeCriteria,
+                                    sizeUnit: "mb"
+                                };
+
+                                break;
+                            }
+
+                            case "kb": {
+                                sizeCriteria = {
+                                    ...sizeCriteria,
+                                    sizeUnit: "kb"
+                                };
+                                    
+                                break;
+                            }
+
+                            default: {
+                                break;
+                            }
+
+                        }
+
+                        result = this.matchesSizeParam(sizeCriteria);
+                    }
+
+                    // check if email date matches date-within params
+                    if (filterKey === "dateRange") {
+                        const dateFormat = "YYYY-MM-DD";
+                        const { from, within } = this.advancedSearchParams[filterKey];
+                        const [value, timeUnit] = within.split(' ');
+                        const to = new Date(moment(from).subtract(value, timeUnit).format(dateFormat));
+
+                        if (thread.messages.length > 0) {                            
+                            for (const msg of thread.messages) {
+                                const dateHeaderValue = msg.payload.headers
+                                    .find(header => header.name.toLowerCase() === 'date')?.value;
+                                
+                                if (dateHeaderValue !== null || dateHeaderValue !== undefined) {
+                                    const msgTime = new Date(moment(dateHeaderValue).format(dateFormat));
+                                    // if msg date is in range
+                                    if (new Date(from).getTime() >= msgTime.getTime() && msgTime.getTime() >= to.getTime()) {
+                                        result = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+
+                        
+                    }
+
+                    // check if email contains attachment
+                    if (filterKey === "hasAttachment" && thread.messages.length > 0) {
+                        for (const msg of thread.messages) {
+                            if (msg.payload.mimeType === "multipart/mixed") {
+                                result = true;
+                                break;
+                            }
                         }
                     }
 
-                    return result
+                    return result;
                 })
                 
                 return filterMapBoolean.every(filterBool => filterBool === true)
@@ -545,7 +594,7 @@ export default {
             const primitives = ['string', 'number', 'boolean']
             for (const key in subjectObj) {
                 const isPrimitive = primitives.includes(typeof subjectObj[key])
-                // is  primitive and is set directly add the key
+                // is  primitive and is set, directly add the key
                 if (isPrimitive && Boolean(subjectObj[key])) {
                     Object.assign(this.userSelectedFilters, {[key]: subjectObj[key]})
                 }
@@ -559,7 +608,6 @@ export default {
             let size = this.advancedSearchParams.size.value;
             if (sizeUnit === "mb") size = size * 1000_000;
             if (sizeUnit === "kb") size = size * 1000;
-            console.log(size)
             // check for greater_than
             if (level === "greater_than") {
                 // check if thread messages match the size
