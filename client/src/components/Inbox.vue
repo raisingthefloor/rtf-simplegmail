@@ -463,7 +463,7 @@ export default {
                     
                     // check if email includes the words
                     if (filterKey === "wordsIncluded") {
-                        if (thread.threadSnippet.toLowerCase().includes(filterKey)) {
+                        if (thread.threadSnippet.toLowerCase().includes(this.advancedSearchParams[filterKey])) {
                             result = true;
                         }
                         
@@ -475,6 +475,25 @@ export default {
                                 ){
                                     result = true;
                                     break;
+                                }
+                            }
+                        }
+                    }
+
+                    // make sure the email does not includes the words
+                    if (filterKey === "wordsExcluded") {
+                        const searchValue = this.advancedSearchParams[filterKey].toLowerCase();
+                        if (!thread.threadSnippet.toLowerCase().includes(searchValue)) {
+                            if (thread.messages.length) {
+                                for(const msg of thread.messages){
+                                    if(
+                                        !msg.snippet.toLowerCase().includes(searchValue)
+                                        && this.notMatchesHeaderKey('from', searchValue, msg)
+                                        && this.notMatchesHeaderKey('to', searchValue, msg)
+                                        && this.notMatchesHeaderKey('subject', searchValue, msg)
+                                    ){
+                                        result = true;
+                                    }
                                 }
                             }
                         }
@@ -588,6 +607,16 @@ export default {
             }
 
             return false
+        },
+
+        notMatchesHeaderKey(key, value, haystack) {
+            if (haystack.payload && !(haystack.payload.headers?.
+                find(header => header.name.toLowerCase() === key)?.value.toLowerCase().includes(value.toLowerCase()))) {
+                    console.log({key, haystack});
+                    return true;
+            }
+
+            return false;
         },
 
         setUserSelectedFilters (subjectObj) {
