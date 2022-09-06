@@ -10,7 +10,7 @@ services:
     environment:
       - TARGET_URL=http://backend:4080
       - PORT=4000
-    #        - VUE_APP_ENV=development
+      - VUE_APP_ENV=development
     depends_on:
       - backend
   backend:
@@ -23,8 +23,12 @@ services:
     environment:
       - port=4080
       - HOST=mongo-db-simplegmail
-      - SSL_DOMAIN=simplegmail.plenartech.com
-      - NODE_LOCAL_HOST=true
+      - GOOGLE_CREDENTIALS={"web":{"client_id":"417728105098-urn8v0e481l1mthrs3i3ltn1jumpejsk.apps.googleusercontent.com","project_id":"simplegmail-324011","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"1gDNBfX9MxdUN_pK0DcSTqwO","redirect_uris":["http://localhost:3000/googlecallback"]}}
+      - MONGODB_PORT=27017
+      - NODE_APP_ENV=development
+      - JWT_SECRET=simplegmail
+      - DB_NAME=simplegmail
+      - FRONT_URL=https://simplegmail.plenartech.com/
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:

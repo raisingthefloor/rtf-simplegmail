@@ -26,11 +26,7 @@ const port = process.env.port || 5000;
 //Establish connection with Mongodb
 mongoConnHandler.connect();
 
-if (process.env.NODE_LOCAL_HOST == 'true') {
-    startNonSSLServer()
-} else {
-    startSSLServer()
-}
+startNonSSLServer()
 
 function startNonSSLServer() {
     let server = require('http').createServer(app);
