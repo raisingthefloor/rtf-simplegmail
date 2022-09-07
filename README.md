@@ -38,7 +38,7 @@ https://developers.google.com/workspace/guides/create-credentials
 - You also have to set up the OAuth consent 
 https://developers.google.com/workspace/guides/configure-oauth-consent
 
-- Following scopes you have to define while configuring Oauth Consent form 
+- Following scopes you have to define while configuring OAuth Consent form 
 
 ![consent-scopes](consent-scopes.png)
 
