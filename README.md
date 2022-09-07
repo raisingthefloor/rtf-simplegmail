@@ -30,7 +30,7 @@ All the APIs are developed in node js & frontend in vuejs
   - ```DB_NAME``` //MongoDB database name
   - ```FRONT_URL``` //You need to change it with your origin domain
 
-### Google sign-in setup on consol
+### Google sign-in setup 
 
 - You have to set up the google credentials, please follow the below setups and generate the JSON file and replace it with ```GOOGLE_CREDENTIALS```
 https://developers.google.com/workspace/guides/create-credentials
@@ -38,8 +38,9 @@ https://developers.google.com/workspace/guides/create-credentials
 - You also have to set up the OAuth consent 
 https://developers.google.com/workspace/guides/configure-oauth-consent
 
-- Following scopes you have to define when you generate the consent form 
-![consent-scopes][consent-scopes.png]
+- Following scopes you have to define while configuring Oauth Consent form 
+
+![consent-scopes](consent-scopes.png)
 
 
 
