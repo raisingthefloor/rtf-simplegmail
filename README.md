@@ -31,14 +31,14 @@ All the APIs are developed in node js & frontend in vuejs
   - ```FRONT_URL``` //You need to change it with your origin domain
 
 ### Google sign-in setup 
-
-- You have to set up the google credentials, please follow the below setups and generate the JSON file and replace it with ```GOOGLE_CREDENTIALS```
+***Please create a project in Google Cloud Console and follow the below setups to configure the Sign in button***
+- You have to set up the google credentials, please follow the given link and generate the JSON file and replace it with ```GOOGLE_CREDENTIALS```
 https://developers.google.com/workspace/guides/create-credentials
 
 - You also have to set up the OAuth consent 
 https://developers.google.com/workspace/guides/configure-oauth-consent
 
-- Following scopes you have to define while configuring OAuth Consent form 
+- Following scopes you have to define while configuring the OAuth Consent form 
 
 ![consent-scopes](consent-scopes.png)
 
